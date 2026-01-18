@@ -1,110 +1,135 @@
 import hashlib
 import zlib
-from app.core.constants import TRANSCEIVER_IDENTIFIERS, REVISION_COMPLIANCE, ETH_100G_COMPLIANCE, EXTENDED_COMPLIANCE
+from app.core.constants import (
+    SFP_MAP, QSFP_MAP, TRANSCEIVER_IDENTIFIERS,
+    REVISION_COMPLIANCE, ETH_100G_COMPLIANCE, EXTENDED_COMPLIANCE
+)
+
+
+def calculate_reach(data, family):
+    """
+    Calcula a distância real baseada nos multiplicadores da norma SFF.
+    Prioriza SMF (km) e depois as fibras Multimodo (OM4/OM3).
+    """
+    total_meters = 0
+
+    if family == "QSFP Family":
+        # SFF-8636: Byte 142 (km), 143 (OM3 * 2m), 146 (OM4 * 2m)
+        smf_km = data[142]
+        om4_2m = data[146] * 2
+        om3_2m = data[143] * 2
+
+        if smf_km > 0:
+            return f"{smf_km} km", smf_km
+        total_meters = max(om4_2m, om3_2m)
+
+    elif family == "SFP Family":
+        # SFF-8472: Byte 14 (km), 18 (OM4 * 10m), 19 (OM3 * 10m)
+        smf_km = data[14]
+        om4_10m = data[18] * 10
+        om3_10m = data[19] * 10
+
+        if smf_km > 0:
+            return f"{smf_km} km", smf_km
+        total_meters = max(om4_10m, om3_10m)
+
+    # Formatação: Se menor que 1km, mostra decimal (ex: 0.3 km)
+    if total_meters > 0:
+        km_decimal = total_meters / 1000
+        return f"{km_decimal:.1f} km", 0
+
+    return "0 km", 0
+
 
 def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex):
     data = bytearray(binary_data)
+    identifier = data[0]
 
-    # 1. Identification of Media Type (Byte 131)
-    compliance_byte = data[131]
-    media_type = "Unknown/Custom"
+    # 1. Determinar Família e Offsets
+    if identifier == 0x03:
+        offsets = SFP_MAP
+        family = "SFP Family"
+    elif identifier in [0x0D, 0x11, 0x18]:
+        offsets = QSFP_MAP
+        family = "QSFP Family"
+    else:
+        offsets = QSFP_MAP
+        family = "Unknown"
 
-    # Check each bit to find the compliance
-    for bit_mask, description in ETH_100G_COMPLIANCE.items():
-        if compliance_byte & bit_mask:
-            media_type = description
-            break
+    # 2. Cálculo de Distância Inteligente
+    # Retorna a string formatada para a UI e o valor SMF puro para a lógica de media_type
+    distance_str, smf_val = calculate_reach(data, family)
 
-    # 1. Hardware Identification (Byte 0)
-    id_byte = data[0]
-    transceiver_type = TRANSCEIVER_IDENTIFIERS.get(id_byte, f"Unknown ({hex(id_byte)})")
+    # 3. Extração Dinâmica de Dados (Vendor, PN, SN)
+    try:
+        v_start, v_end = offsets["vendor_name"]
+        vendor_name = data[v_start:v_end].decode('ascii', errors='ignore').strip()
 
-    # 2. Revision Compliance Algorithm (Byte 1)
-    rev_byte = data[1]
-    revision_name = REVISION_COMPLIANCE.get(rev_byte, f"Unknown Revision ({hex(rev_byte)})")
+        p_start, p_end = offsets["part_number"]
+        part_number = data[p_start:p_end].decode('ascii', errors='ignore').strip()
 
-    # 1. Distance Check (The most reliable source for reach)
-    distance_km = data[146]  # Byte 146 (92h)
+        s_start, s_end = offsets["serial_number"]
+        serial_number = data[s_start:s_end].decode('ascii', errors='ignore').strip()
+    except Exception:
+        vendor_name, part_number, serial_number = "Unknown", "Unknown", "Unknown"
 
-    # 2. Compliance Logic
-    compliance_131 = data[131]  # Byte 131 (83h)
-    extended_192 = data[192]  # Byte 192 (C0h)
+    # 4. Identificação do Tipo de Transceiver (SFF-8024)
+    transceiver_type = TRANSCEIVER_IDENTIFIERS.get(identifier, f"{family} ({hex(identifier)})")
 
+    # 5. Lógica de Media Type (QSFP Specific)
     media_type = "Unknown"
+    if family == "QSFP Family":
+        compliance_131 = data[131]
+        extended_192 = data[192]
 
-    # SMART LOGIC: If it's 20km, prioritize that regardless of Byte 131
-    if distance_km == 20:
-        if extended_192 == 0x41:
-            media_type = "100G-4WDM-20"
-        else:
-            media_type = "100G-LR4 (20km Variant)"
+        # Lógica para variantes de 20km (usa o valor SMF puro)
+        if smf_val == 20:
+            media_type = "100G-4WDM-20" if extended_192 == 0x41 else "100G-LR4 (20km)"
 
-    # If not 20km, follow the standard bitmask
-    elif compliance_131 != 0:
-        if compliance_131 & 0x02:
-            media_type = "100GBASE-LR4"
-        elif compliance_131 & 0x01:
-            media_type = "100GBASE-ER4"
-        elif compliance_131 & 0x80:
-            # If distance is > 0, it's likely NOT an AOC despite the 0x80 bit
-            media_type = "100G-AOC" if distance_km == 0 else "100G-Custom Optical"
+        elif compliance_131 != 0:
+            if compliance_131 & 0x02:
+                media_type = "100GBASE-LR4"
+            elif compliance_131 & 0x01:
+                media_type = "100GBASE-ER4"
+            elif compliance_131 & 0x80:
+                # Se houver distância física, provavelmente não é um AOC (mesmo com bit 0x80)
+                media_type = "100G-AOC" if smf_val == 0 and "0.0" in distance_str else "100G-SR4/Optical"
 
-    # Final fallback to Extended Codes
-    if media_type == "Unknown" and extended_192 != 0:
-        media_type = EXTENDED_COMPLIANCE.get(extended_192, f"Extended ({hex(extended_192)})")
+        if media_type == "Unknown" and extended_192 != 0:
+            media_type = EXTENDED_COMPLIANCE.get(extended_192, f"Ext ({hex(extended_192)})")
+    else:
+        media_type = "SFP Standard"
 
-    # 3. Basic Hardware Status (Byte 2)
-    # Bit 0: 0 = Adressable/Ready, 1 = Not Ready
-    status_byte = data[2]
-    is_ready = (status_byte & 0x01) == 0
-    status_msg = "Module Ready" if is_ready else "Data Not Ready"
+    # 6. Check de Revisão e Status
+    rev_byte = data[1]
+    revision_name = REVISION_COMPLIANCE.get(rev_byte, f"Rev {hex(rev_byte)}")
+    status_msg = "Module Ready" if (data[2] & 0x01) == 0 else "Data Not Ready"
 
-    # --- MEMORY EXPANSION & DATA EXTRACTION (Keep your existing logic) ---
+    # 7. Expansão de Memória e Criptografia
     if len(data) < 512:
         data.extend(b'\x00' * (512 - len(data)))
 
-    try:
-        vendor_name = data[148:164].decode('ascii', errors='ignore').strip()
-        serial_number = data[196:212].decode('ascii', errors='ignore').strip()
-        part_number = data[168:184].decode('ascii', errors='ignore').strip()
-
-    except Exception:
-        vendor_name = "Unknown"
-        part_number = "Unknown"
-        serial_number = "Unknown"
-
-    # 4. Prepare inputs for MD5 Calculation
     manu_id_bytes = bytes.fromhex(manu_id_hex.zfill(2))
     vendor_padded = vendor_name.encode('ascii').ljust(16, b'\x20')
     serial_padded = serial_number.encode('ascii').ljust(16, b'\x20')
     magic_bytes = bytes.fromhex(magic_key_hex.replace(' ', ''))
 
-    # 5. Generate MD5 Hash
+    # MD5 e CRC32
     md5_input = manu_id_bytes + vendor_padded + serial_padded + magic_bytes
     md5_digest = hashlib.md5(md5_input).digest()
 
-    # 6. Generate Reversed CRC32
-    # Input format: 00 00 + ManuID + MD5 + 9 bytes of 0x00
     crc_input = b'\x00\x00' + manu_id_bytes + md5_digest + (b'\x00' * 9)
     crc32_val = zlib.crc32(crc_input) & 0xFFFFFFFF
     crc32_reversed = crc32_val.to_bytes(4, byteorder='big')[::-1]
 
-    # 7. Binary Injection
-    data[226] = manu_id_bytes[0]      # Manu_ID at byte 226 (0xE2)
-    data[227:243] = md5_digest        # MD5 starting at 227 (0xE3)
-    data[252:256] = crc32_reversed    # CRC32 at the end of the block (0xFC)
+    # 8. Injeção Binária (E2, E3, FC)
+    data[226] = manu_id_bytes[0]
+    data[227:243] = md5_digest
+    data[252:256] = crc32_reversed
 
     return (
-        data,
-        vendor_name,
-        serial_number,
-        part_number,
-        transceiver_type,
-        media_type,
-        f"{distance_km} km",
-        revision_name,  # New
-        status_msg,  # New
-        md5_digest.hex().upper(),
-        crc32_reversed.hex().upper()
+        data, vendor_name, part_number, serial_number,
+        transceiver_type, media_type, distance_str,
+        revision_name, status_msg,
+        md5_digest.hex().upper(), crc32_reversed.hex().upper()
     )
-

@@ -63,16 +63,18 @@ def main():
                 st.metric("Reach / Distance", distance)  # Crucial for 20km validation
 
             # Row 2: Technical Specifications
-            row2_col1, row2_col2, row2_col3, row2_col4 = st.columns(4)
+            row2_col1, row2_col2, row2_col3, = st.columns(3)
             with row2_col1:
                 st.metric("Part Number", part)
             with row2_col2:
                 st.metric("Form Factor", t_type)
             with row2_col3:
                 st.metric("Revision", rev_name)
+
+            row2_col4, = st.columns(1)
+            # Row 3: Technical Specifications
             with row2_col4:
                 st.metric("Media Type", media_type)
-
             st.divider()
 
             # 4. Technical Signatures for Engineering

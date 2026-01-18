@@ -54,3 +54,16 @@ EXTENDED_COMPLIANCE = {
     0x42: "100G-4WDM-40 (40km)",
     0x43: "100G-LR4-P (Standard)",
 }
+
+# Memory Map Offsets (Decimal)
+SFP_MAP = {
+    "vendor_name": (20, 36),   # Offset 20-35
+    "part_number": (40, 56),   # Offset 40-55
+    "serial_number": (68, 84), # Offset 68-83
+}
+
+QSFP_MAP = {
+    "vendor_name": (148, 164), # Offset 148-163 (94h)
+    "part_number": (168, 184), # Offset 168-183 (A8h)
+    "serial_number": (196, 212),# Offset 196-211 (C4h)
+}
