@@ -32,7 +32,7 @@ def main():
 
     # 2. File Upload Section
     st.subheader("2. 📤 Upload Original Dump")
-    uploaded_file = st.file_uploader("Drop the .bin file extracted from the transceiver here", type=["bin"])
+    uploaded_file = st.file_uploader("", type=["bin"])
     st.info("💡 **Note:** Only the complete BIN file allowed, not only the A0, or A2 file.")
 
     if uploaded_file is not None:
