@@ -122,10 +122,25 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex):
     crc32_val = zlib.crc32(crc_input) & 0xFFFFFFFF
     crc32_reversed = crc32_val.to_bytes(4, byteorder='big')[::-1]
 
-    # 8. Injeção Binária (E2, E3, FC)
-    data[226] = manu_id_bytes[0]
-    data[227:243] = md5_digest
-    data[252:256] = crc32_reversed
+    # 8. Injeção Binária - Codificação.
+
+    if family == "SFP Family":
+        data[96:97] = (b'\x00' * 2)     #60h - 62h
+        data[98] = manu_id_bytes[0]     #62h
+        data[99:114] = md5_digest       #63h - 72h
+        data[115:123] = (b'\x00' * 9)   #73h a 7Bh
+        data[124:127] = crc32_reversed  #7Ch a 7Fh
+        print("Transceiver SFP Crackeado com sucesso!")
+    elif family == "QSFP Family":
+        data[224:225] = (b'\x00' * 2)  # E0h - E1h
+        data[226] = manu_id_bytes[0]   # E2h
+        data[227:242] = md5_digest     # E3h a F2h
+        data[243:251] = (b'\x00' * 9)  # F3h a FBh
+        data[252:256] = crc32_reversed # FCh a FFh
+        print("Transceiver QSFP Crackeado com sucesso!")
+    else :
+        print("Error - Family not supported")
+
 
     return (
         data, vendor_name, part_number, serial_number,
