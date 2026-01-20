@@ -6,6 +6,11 @@ from app.core.constants import (
 )
 
 
+def calculate_sff_checksum(data_block):
+# Soma todos os bytes do bloco e retorna apenas o byte menos significativo (LSB)
+    return sum(data_block) & 0xFF
+
+
 def calculate_reach(data, family):
     """
     Calcula a distância real baseada nos multiplicadores da norma SFF.
@@ -122,6 +127,24 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex):
     crc32_val = zlib.crc32(crc_input) & 0xFFFFFFFF
     crc32_reversed = crc32_val.to_bytes(4, byteorder='big')[::-1]
 
+    # --- RECALCULO DE CHECKSUMS PADRÃO SFF ---
+    # Importante: Faça isso ANTES de retornar os dados finais
+
+    if family == "SFP Family":
+        #SFF-8472
+        # CC_BASE: Soma dos bytes 0 a 62, armazena no 63
+        data[63] = calculate_sff_checksum(data[0:62])
+        #CC_EXT: Soma dos bytes 64 a 94, armazena no 95
+        data[95] = calculate_sff_checksum(data[64:94])
+
+    elif family == "QSFP Family":
+        # SFF-8636 (Upper Page 00h começa no offset 128)
+        # CC_BASE: Soma dos bytes 128 a 190, armazena no 191
+        data[191] = calculate_sff_checksum(data[128:190])
+        # CC_EXT: Soma dos bytes 192 a 222, armazena no 223
+        data[223] = calculate_sff_checksum(data[192:222])
+
+
     # 8. Injeção Binária - Codificação.
 
     if family == "SFP Family":
@@ -140,6 +163,7 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex):
         print("Transceiver QSFP Crackeado com sucesso!")
     else :
         print("Error - Family not supported")
+
 
 
     return (

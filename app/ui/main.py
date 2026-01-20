@@ -77,15 +77,19 @@ def main():
                 st.metric("Media Type", media_type)
             st.divider()
 
+
+
             # 4. Technical Signatures for Engineering
             st.write("### 🛠️ Compatibility Signatures")
+            st.write("##### Selected Compatiility:  " + str(key_selection))
             h_col1, h_col2 = st.columns(2)
             with h_col1:
-                st.write("**Generated MD5 (Injected at 0xE3):**")
+                st.write("**Generated MD5 (16 bytes - Injected at 0xE3):**")
                 st.code(md5_res, language="text")
             with h_col2:
-                st.write("**Reversed CRC32 (Injected at 0xFC):**")
+                st.write("**Reversed CRC32 (4 bytes - Injected at 0xFC):**")
                 st.code(crc_res, language="text")
+            st.success(f"✅ Patch Generated Successfully!")
 
             # 5. Export Button
             st.divider()

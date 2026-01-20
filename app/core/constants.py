@@ -1,8 +1,8 @@
 # Magic Keys for Cisco's MD5 validation algorithm
 MAGIC_KEYS = {
-    "02 (Cisco 1)": "8DDAE6A4 6EC9DEF6 100BF185 059C3DAB",
-    "0E (Cisco 2)": "4AF86716 ED1E2F34 7CA13C99 78AD8CA0",
-    "11 (Cisco 3)": "E14869FD A81B1C21 2D715E3B C1371D75",
+    "02 (Cisco)": "8DDAE6A4 6EC9DEF6 100BF185 059C3DAB",
+    "0E (Cisco)": "4AF86716 ED1E2F34 7CA13C99 78AD8CA0",
+    "11 (Cisco)": "E14869FD A81B1C21 2D715E3B C1371D75",
 }
 
 # Standard Transceiver Form Factor Identifiers (SFF-8024)
