@@ -5,13 +5,42 @@ MAGIC_KEYS = {
     "11 (Cisco)": "E14869FD A81B1C21 2D715E3B C1371D75",
 }
 
-# Standard Transceiver Form Factor Identifiers (SFF-8024)
+# Standard Transceiver Form Factor Identifiers (SFF-8024 / CMIS)
 TRANSCEIVER_IDENTIFIERS = {
     0x03: "SFP / SFP+ / SFP28",
     0x0D: "QSFP+",
     0x11: "QSFP28",
-    0x18: "QSFP-DD",
+    0x18: "QSFP-DD (400G)",
     0x1E: "OSFP"
+}
+
+# Memory Map Offsets (Decimal)
+SFP_MAP = {
+    "vendor_name": (20, 36),   # Offset 20-35
+    "part_number": (40, 56),   # Offset 40-55
+    "serial_number": (68, 84), # Offset 68-83
+}
+
+QSFP_MAP = {
+    "vendor_name": (148, 164), # Offset 148-163 (94h)
+    "part_number": (168, 184), # Offset 168-183 (A8h)
+    "serial_number": (196, 212),# Offset 196-211 (C4h)
+}
+
+# CMIS Map for 400G / QSFP-DD (Common Management Interface Specification)
+CMIS_MAP = {
+    "vendor_name": (129, 145),   # Offset 129-144 (81h-90h)
+    "part_number": (148, 164),   # Offset 148-163 (94h-A3h)
+    "serial_number": (166, 182), # Offset 166-181 (A6h-B5h)
+}
+
+# 400G Ethernet Compliance Codes (CMIS Byte 131)
+ETH_400G_COMPLIANCE = {
+    0x01: "400G-AOC",
+    0x02: "400G-SR8",
+    0x03: "400G-LR8",
+    0x04: "400G-DR4",
+    0x05: "400G-FR4",
 }
 
 # SFF-8636 Revision Compliance Codes (Byte 01h)
@@ -28,7 +57,6 @@ REVISION_COMPLIANCE = {
 }
 
 # Status Indicators (Byte 02h)
-# Bit 0 is 'Data Not Ready'
 HARDWARE_STATUS = {
     "READY": "Module Ready",
     "NOT_READY": "Data Not Ready (Initializing)",
@@ -53,17 +81,4 @@ EXTENDED_COMPLIANCE = {
     0x41: "100G-4WDM-20 (20km)",
     0x42: "100G-4WDM-40 (40km)",
     0x43: "100G-LR4-P (Standard)",
-}
-
-# Memory Map Offsets (Decimal)
-SFP_MAP = {
-    "vendor_name": (20, 36),   # Offset 20-35
-    "part_number": (40, 56),   # Offset 40-55
-    "serial_number": (68, 84), # Offset 68-83
-}
-
-QSFP_MAP = {
-    "vendor_name": (148, 164), # Offset 148-163 (94h)
-    "part_number": (168, 184), # Offset 168-183 (A8h)
-    "serial_number": (196, 212),# Offset 196-211 (C4h)
 }
