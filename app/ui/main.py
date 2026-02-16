@@ -2,107 +2,121 @@ import streamlit as st
 import sys
 from pathlib import Path
 
-# --- Absolute Path Fix for Linux/PyCharm Environment ---
+# --- 🛠️ CORREÇÃO DE CAMINHO (PATH FIX) ---
+# Garante que o Python encontre a pasta 'app' no Debian/GCP ou PyCharm
 current_dir = Path(__file__).resolve().parent
 project_root = current_dir.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from app.core.algorithms import apply_cisco_patch
-from app.core.constants import MAGIC_KEYS
+from app.core.constants import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS
 
 
 def main():
-    # MANDATORY: Must be the first Streamlit command
-    st.set_page_config(page_title="EPS Transceiver Coder", layout="wide")
+    # Configuração da Página
+    st.set_page_config(page_title="EPS Transceiver Coder", layout="wide", page_icon="🔐")
 
-    st.title("🔐 Transceiver Compatibility Tool")
-    st.write("Engineering Utility for Optical Transceivers | EPS Global")
+    st.title("🔐 Transceiver Compatibility & Rebrand Tool")
+    st.write("Engineering Utility for Optical Transceivers | **EPS Global**")
 
-    # Sidebar Configuration
-    st.sidebar.header("System Configs")
-    st.sidebar.info("Application optimized for QSFP28 (100G) and SFP+ (10G) standards.")
+    # --- SIDEBAR ---
+    st.sidebar.header("🚀 System Status")
+    st.sidebar.info("Suporte: 10G (SFP+), 25G (SFP28), 100G (QSFP28) e 400G (QSFP-DD).")
+    st.sidebar.write(f"**User:** Wellyson Mota")
 
-    # 1. Target Manufacturer Selection (Main Page as per your change)
-    st.subheader("1. 🎛️ Please Select the Target Manufacturer Compatibility")
-    key_selection = st.selectbox("Target Manufacturer (Magic Key):", list(MAGIC_KEYS.keys()))
+    # --- ETAPA 1: CONFIGURAÇÃO DE COMPATIBILIDADE ---
+    st.subheader("1. 🎛️ Compatibility Settings")
+    col_k1, col_k2 = st.columns([2, 1])
+
+    with col_k1:
+        key_selection = st.selectbox(
+            "Target Manufacturer Compatibility (Magic Key):",
+            list(MAGIC_KEYS.keys()),
+            help="Selecione a chave de criptografia desejada para o patch Cisco."
+        )
+
+    # Extrai o ID (ex: "08") e a Key Hex do dicionário
     selected_key_hex = MAGIC_KEYS[key_selection]
-    selected_manu_id_hex = key_selection[:2]
+    selected_manu_id_hex = key_selection[:2]  # Pega os 2 primeiros caracteres (ex: 08)
+
     st.divider()
 
-    # 2. File Upload Section
+    # --- ETAPA 2: REBRANDING OPCIONAL ---
+    with st.expander("📝 Optional Rebranding (Overwrite Original Strings)"):
+        st.write("Deixe em branco para manter os dados originais do dump.")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            new_v = st.text_input("New Vendor Name", placeholder="Ex: CISCO-FINISAR")
+        with c2:
+            new_p = st.text_input("New Part Number", placeholder="Ex: QSFP-400G-DR4")
+        with c3:
+            new_s = st.text_input("New Serial Number", placeholder="Ex: EPS20260216")
+
+    st.divider()
+
+    # --- ETAPA 3: UPLOAD E PROCESSAMENTO ---
     st.subheader("2. 📤 Upload Original Dump")
-    uploaded_file = st.file_uploader("", type=["bin"])
-    st.info("💡 **Note:** Only the complete BIN file allowed, not only the A0, or A2 file.")
+    uploaded_file = st.file_uploader("Arraste o arquivo .bin aqui", type=["bin"])
 
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
 
         if len(file_bytes) < 256:
-            st.error("Invalid file! The dump must be at least 256 bytes (Page 00h).")
+            st.error("Arquivo inválido! O dump precisa ter pelo menos 256 bytes.")
         else:
-            # --- Processing: Unpacking all 11 return values from the engine ---
-            # Added 'distance' to match our 20km logic
-            patched_bin, vendor, part, sn, t_type, media_type, distance, rev_name, status, md5_res, crc_res = apply_cisco_patch(
-                file_bytes, selected_key_hex, selected_manu_id_hex
-            )
+            # PROCESSAMENTO NO ALGORITHMS
+            # Passamos os novos campos de texto para a função
+            try:
+                # O algoritmo retorna 11 valores
+                (patched_bin, vendor, part, sn, t_type, media,
+                 distance, rev, status, md5_res, crc_res) = apply_cisco_patch(
+                    file_bytes, selected_key_hex, selected_manu_id_hex,
+                    new_vendor=new_v, new_pn=new_p, new_sn=new_s
+                )
 
-            st.success(f"✅ Analysis complete!")
-            st.divider()
+                st.success("✅ Analysis & Patching Complete!")
 
-            # 3. ⚙️ Transceivers Details & Hardware Check
-            st.subheader("3.⚙️ Transceivers Details & Hardware Check")
+                # --- DASHBOARD DE MÉTRICAS ---
+                st.subheader("3. ⚙️ Hardware Metadata Check")
 
-            # Row 1: Core Identification
-            row1_col1, row1_col2, row1_col3 = st.columns(3)
-            with row1_col1:
-                st.metric("Vendor", vendor)
-            with row1_col2:
-                st.metric("Serial Number", sn)
-            with row1_col3:
-                st.metric("Reach / Distance", distance)  # Crucial for 20km validation
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Current Vendor", vendor)
+                m2.metric("Serial Number", sn)
+                m3.metric("Reach / Distance", distance)
+                m4.metric("Form Factor", t_type)
 
-            # Row 2: Technical Specifications
-            row2_col1, row2_col2, row2_col3, = st.columns(3)
-            with row2_col1:
-                st.metric("Part Number", part)
-            with row2_col2:
-                st.metric("Form Factor", t_type)
-            with row2_col3:
-                st.metric("Revision", rev_name)
+                m5, m6, m7 = st.columns([2, 1, 1])
+                m5.metric("Part Number", part)
+                m6.metric("Media Type", media)
+                m7.metric("Status", status)
 
-            row2_col4, = st.columns(1)
-            # Row 3: Technical Specifications
-            with row2_col4:
-                st.metric("Media Type", media_type)
-            st.divider()
+                # --- ASSINATURAS TÉCNICAS ---
+                st.write("### 🛠️ Compatibility Signatures")
+                st.info(f"Using **Key {selected_manu_id_hex}** for MD5 Generation.")
 
+                h1, h2 = st.columns(2)
+                with h1:
+                    st.write("**Injected MD5 (16 bytes):**")
+                    st.code(md5_res, language="text")
+                with h2:
+                    st.write("**Reversed CRC32 (4 bytes):**")
+                    st.code(crc_res, language="text")
 
+                # --- EXPORTAÇÃO ---
+                st.divider()
+                st.subheader("4. 📥 Export")
+                st.download_button(
+                    label="🚀 Download Patched Binary",
+                    data=bytes(patched_bin),
+                    file_name=f"patched_{sn}_cisco.bin",
+                    mime="application/octet-stream",
+                    use_container_width=True
+                )
 
-            # 4. Technical Signatures for Engineering
-            st.write("### 🛠️ Compatibility Signatures")
-            st.write("##### Selected Compatiility:  " + str(key_selection))
-            h_col1, h_col2 = st.columns(2)
-            with h_col1:
-                st.write("**Generated MD5 (16 bytes - Injected at 0xE3):**")
-                st.code(md5_res, language="text")
-            with h_col2:
-                st.write("**Reversed CRC32 (4 bytes - Injected at 0xFC):**")
-                st.code(crc_res, language="text")
-            st.success(f"✅ Patch Generated Successfully!")
-
-            # 5. Export Button
-            st.divider()
-            st.subheader("4. 📥 Export")
-            st.download_button(
-                label="🚀 Download Patched Binary",
-                data=bytes(patched_bin),
-                file_name=f"patched_{sn}_cisco.bin",
-                mime="application/octet-stream",
-                use_container_width=True
-
-            )
-
+            except Exception as e:
+                st.error(f"Erro no processamento: {e}")
+                st.info("Verifique se as funções no algorithms.py aceitam os argumentos de Rebrand.")
 
 
 if __name__ == "__main__":
