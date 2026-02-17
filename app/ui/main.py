@@ -9,7 +9,7 @@ project_root = current_dir.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from app.core.algorithms import apply_cisco_patch
+from app.core.algorithms import apply_cisco_patch, calculate_sff_checksum
 from app.core.constants import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS
 
 
