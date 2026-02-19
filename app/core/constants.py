@@ -2,8 +2,12 @@
 MAGIC_KEYS = {
     "02 (Cisco)": "8DDAE6A4 6EC9DEF6 100BF185 059C3DAB",
     "08 (Cisco)": "30DB1EE9 C7913AE5 A3C8161B 574A9FF6",
+    "06 (Cisco)": "175258fe e9b4f0d9 eab6006f 7c65a8cb",
     "0E (Cisco)": "4AF86716 ED1E2F34 7CA13C99 78AD8CA0",
     "11 (Cisco)": "E14869FD A81B1C21 2D715E3B C1371D75",
+    "JUNIPER": "",
+    "INTEL": "",
+    "HUAWEI": "",
 }
 
 # Standard Transceiver Form Factor Identifiers (SFF-8024 / CMIS)

@@ -1,5 +1,7 @@
 import hashlib
 import zlib
+from tkinter.dnd import *
+
 from app.core.constants import (
     SFP_MAP, QSFP_MAP, CMIS_MAP, TRANSCEIVER_IDENTIFIERS,
     REVISION_COMPLIANCE, MAGIC_KEYS
@@ -102,4 +104,22 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex,
 
     return (data, vendor_final, pn_final, sn_final, t_type, "Optical",
             distance_str, "Rev 1.0", "Ready",
-            md5_digest.hex().upper(), crc32_reversed.hex().upper())
+               md5_digest.hex().upper(), crc32_reversed.hex().upper())
+
+
+def apply_juniper_patch(binary_data, magic_key_hex, manu_id_hex,
+                      new_vendor=None, new_pn=None, new_sn=None):
+    data = bytearray(binary_data)
+
+    new_vendor, new_pn, new_sn, t_type = "Teste", "Teste", "Teste", "Teste"
+    vendor_final = new_vendor
+    pn_final = new_pn
+    sn_final = new_sn
+    t_type = t_type.upper()
+    md5_digest = ("0102030401")
+    crc32_reversed = ("01020304")
+    distance_str = 10
+
+    return (data, vendor_final, pn_final, sn_final, t_type, "Optical",
+            distance_str, "Rev 1.0", "Ready",
+            md5_digest().upper(), crc32_reversed.hex().upper())

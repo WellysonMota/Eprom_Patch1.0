@@ -234,3 +234,18 @@ QSFP-DD-400G-FR4	10-3332-01	V01	COUIBCCCAA	400GBASE-FR4 (2km SM)
 QSFP-DD-400G-LR8	10-3333-01	V01	COUIBA8CAA	400GBASE-LR8 (10km SM)
 QSFP-400G-ZR-S	10-XXXX-XX	V01	COUIBTCCAA	400G-ZR (OIF), 120km
 QSFP-400G-ZRP-S	10-XXXX-XX	V01	COUIBTECAA	400G-ZR+ (ZR-Plus)
+
+
+Empresa,OUI (Hex),Papel no Transceiver
+Intel,00 1B 21,Obrigatório para rebrand Intel.
+Cisco,00 05 5F,Opcional (o MD5 é o que manda).
+Juniper,00 05 85,Importante para conformidade rigorosa.
+Finisar,00 90 65,OUI de fábrica (comum em módulos OEM).
+Avago,00 17 6A,OUI de fábrica (muito comum em 10G/40G).
+
+
+Prioridade,Campo,Valor Necessário,Por que?
+1 (Crítico),Vendor OUI,00 1B 21,"É a ""assinatura digital"" da Intel na IEEE."
+2 (Crítico),Vendor Name,INTEL           ,Deve ter exatamente 16 bytes (preenchido com espaços).
+3 (Importante),Checksum,Calculado,A Intel bloqueia módulos com EEPROM corrompida (Byte 95).
+4 (Opcional),Serial,INXXXXXXXXXX,Para fins de inventário e logs do driver.
