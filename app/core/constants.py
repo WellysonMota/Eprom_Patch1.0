@@ -175,3 +175,14 @@ CISCO_PROFILES = {
         "form_factor": "QSFP-DD"
     }
 }
+
+
+JUNIPER_PROFILES = {
+    # --- 1G SFP (Memory Page A2h - Offset 180h) ---
+    "GLC-SX-MM": {
+        "tan": "10-2130-01V01",
+        "clei": "COUIAJCBAA",
+        "description": "1000BASE-SX (850nm MM)",
+        "form_factor": "SFP"
+    }
+}

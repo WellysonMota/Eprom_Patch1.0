@@ -1,6 +1,6 @@
 import hashlib
 import zlib
-from tkinter.dnd import *
+
 
 from app.core.constants import (
     SFP_MAP, QSFP_MAP, CMIS_MAP, TRANSCEIVER_IDENTIFIERS,
