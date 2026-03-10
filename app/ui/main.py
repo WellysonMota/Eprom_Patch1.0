@@ -19,7 +19,7 @@ def main():
     st.set_page_config(page_title="EPS Transceiver Coder", layout="wide", page_icon="🔐")
 
     st.title("🔐 Transceiver Compatibility & Rebrand Tool")
-    st.write("Engineering Utility for Optical Transceivers | **EPS Global**")
+    st.write("Engineering Utility for Optical Transceivers v0.1| **EPS Global**")
 
     # --- SIDEBAR ---
     st.sidebar.header("🚀 System Status")
