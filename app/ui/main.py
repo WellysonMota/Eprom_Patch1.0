@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 from pathlib import Path
 
+#Foi corrigdo o bug no checksum
 # --- 🛠️ CORREÇÃO DE CAMINHO (PATH FIX) ---
 # Garante que o Python encontre a pasta 'app' no Debian/GCP ou PyCharm
 current_dir = Path(__file__).resolve().parent

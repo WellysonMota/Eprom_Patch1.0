@@ -81,13 +81,14 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex,
 
     # --- PASSO 4: RECÁLCULO DE CHECKSUMS PADRÃO ---
     if family == "SFP Family":
-        data[63] = calculate_sff_checksum(data[0:62])
-        data[95] = calculate_sff_checksum(data[64:94])
+        data[63] = calculate_sff_checksum(data[0:63])
+        data[95] = calculate_sff_checksum(data[64:95])
     elif family == "QSFP Family":
-        data[191] = calculate_sff_checksum(data[128:190])
-        data[223] = calculate_sff_checksum(data[192:222])
+        data[191] = calculate_sff_checksum(data[128:191])
+        data[223] = calculate_sff_checksum(data[192:223])
     elif family == "400G Family":
-        data[255] = calculate_sff_checksum(data[128:254])
+        data[255] = calculate_sff_checksum(data[128:255]) ##PRECISA CORRIGIR!!!
+        #corrigido checksum
 
     # --- PASSO 5: INJEÇÃO DO PATCH CISCO ---
     if family == "SFP Family":
