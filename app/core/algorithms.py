@@ -92,6 +92,7 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex,
 
     # --- PASSO 5: INJEÇÃO DO PATCH CISCO ---
     if family == "SFP Family":
+        data[96:97] = b'\x00\x00'
         data[98] = manu_id_bytes[0]  # Offset 62h
         data[99:115] = md5_digest  # Offset 63h
         data[124:128] = crc32_reversed  # Offset 7Ch
