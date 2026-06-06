@@ -92,14 +92,17 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex,
 
     # --- PASSO 5: INJEÇÃO DO PATCH CISCO ---
     if family == "SFP Family":
-        data[96:97] = b'\x00\x00'
-        data[98] = manu_id_bytes[0]  # Offset 62h
-        data[99:115] = md5_digest  # Offset 63h
-        data[124:128] = crc32_reversed  # Offset 7Ch
+        data[96:98] = b'\x00\x00'  # 0x60, 0x61 — 2 bytes ← CORRIGIDO
+        data[98] = manu_id_bytes[0]  # 0x62 — Manu ID
+        data[99:115] = md5_digest  # 0x63-0x72 — MD5 (16 bytes)
+        data[115:124] = b'\x00' * 9  # 0x73-0x7B — Zero padding ← FALTAVA
+        data[124:128] = crc32_reversed  # 0x7C-0x7F — CRC32
     else:
-        data[226] = manu_id_bytes[0]  # Offset E2h
-        data[227:243] = md5_digest  # Offset E3h
-        data[252:256] = crc32_reversed  # Offset FCh
+        data[224:226] = b'\x00\x00'  # 0xE0, 0xE1 — 2 bytes ← também corrigir
+        data[226] = manu_id_bytes[0]  # 0xE2 — Manu ID
+        data[227:243] = md5_digest  # 0xE3-0xF2 — MD5 (16 bytes)
+        data[243:252] = b'\x00' * 9  # 0xF3-0xFB — Zero padding ← FALTAVA
+        data[252:256] = crc32_reversed  # 0xFC-0xFF — CRC32
 
     distance_str, _ = calculate_reach(data, family)
     t_type = TRANSCEIVER_IDENTIFIERS.get(identifier, family)
