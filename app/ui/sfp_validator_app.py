@@ -33,13 +33,13 @@ html, body, [class*="css"] { font-family: 'Rajdhani', sans-serif; }
 
 .title-block { padding: 1.8rem 0 0.4rem 0; }
 .title-block h1 {
-    font-size: 2.4rem; font-weight: 700;
+    font-size: 2.8rem; font-weight: 700;
     color: #00e5ff;
     text-shadow: 0 0 30px rgba(0,229,255,0.35);
     letter-spacing: 0.06em; margin-bottom: 0.1rem;
 }
 .title-block p {
-    color: #3a6a7a; font-size: 0.88rem;
+    color: #3a6a7a; font-size: 1.4rem;
     font-family: 'Share Tech Mono', monospace;
     letter-spacing: 0.12em; margin-top: 0;
 }
@@ -48,7 +48,7 @@ hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
 
 .section-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.72rem; letter-spacing: 0.2em;
+    font-size: 1.0rem; letter-spacing: 0.2em;
     color: #00e5ff; text-transform: uppercase;
     margin: 1.8rem 0 0.6rem 0;
     padding-left: 0.6rem;
@@ -73,12 +73,12 @@ hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
 [data-testid="stMetricLabel"] {
     color: #3a6a7a !important;
     font-family: 'Share Tech Mono', monospace !important;
-    font-size: 0.72rem !important; letter-spacing: 0.1em !important;
+    font-size: 1.0rem !important; letter-spacing: 0.1em !important;
 }
 [data-testid="stMetricValue"] {
     color: #a0d8ef !important;
     font-family: 'Rajdhani', sans-serif !important;
-    font-size: 1.15rem !important; font-weight: 700 !important;
+    font-size: 1.4rem !important; font-weight: 700 !important;
 }
 
 /* Alerts */
@@ -86,32 +86,32 @@ hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
     background: rgba(0,255,140,0.07) !important;
     border: 1px solid rgba(0,255,140,0.25) !important;
     color: #ccffee !important; border-radius: 6px !important;
-    font-family: 'Share Tech Mono', monospace !important; font-size: 0.85rem !important;
+    font-family: 'Share Tech Mono', monospace !important; font-size: 1.15rem !important;
 }
 .stError {
     background: rgba(255,60,60,0.07) !important;
     border: 1px solid rgba(255,60,60,0.25) !important;
     border-radius: 6px !important;
-    font-family: 'Share Tech Mono', monospace !important; font-size: 0.85rem !important;
+    font-family: 'Share Tech Mono', monospace !important; font-size: 1.15rem !important;
 }
 .stInfo {
     background: rgba(0,180,255,0.06) !important;
     border: 1px solid rgba(0,180,255,0.2) !important;
     border-radius: 6px !important;
     font-family: 'Share Tech Mono', monospace !important;
-    font-size: 0.82rem !important; color: #7ac8e8 !important;
+    font-size: 1.5rem !important; color: #7ac8e8 !important;
 }
 .stWarning {
     background: rgba(255,180,0,0.07) !important;
     border: 1px solid rgba(255,180,0,0.25) !important;
     border-radius: 6px !important;
-    font-family: 'Share Tech Mono', monospace !important; font-size: 0.82rem !important;
+    font-family: 'Share Tech Mono', monospace !important; font-size: 1.5rem !important;
 }
 
 /* Sidebar status */
 .sidebar-status {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.78rem; color: #3a6a7a;
+    font-size: 1.05rem; color: #3a6a7a;
     padding: 0.8rem; border: 1px solid #1a2a3a;
     border-radius: 6px; background: #060c14; line-height: 1.9;
 }
@@ -125,7 +125,7 @@ hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
 .id-badge {
     display: inline-block;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.78rem; letter-spacing: 0.12em;
+    font-size: 1.05rem; letter-spacing: 0.12em;
     padding: 0.25rem 0.8rem;
     border-radius: 4px; margin-right: 0.5rem;
 }
@@ -142,24 +142,24 @@ hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
     padding: 1rem 1.4rem;
     margin-bottom: 0.6rem;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.82rem;
+    font-size: 1.5rem;
 }
 .check-header {
     display: flex; justify-content: space-between;
     align-items: center; margin-bottom: 0.4rem;
 }
-.check-name { color: #4a8a9a; font-size: 0.78rem; letter-spacing: 0.15em; }
+.check-name { color: #4a8a9a; font-size: 1.05rem; letter-spacing: 0.15em; }
 .badge-pass {
     background: rgba(0,255,140,0.12); color: #00ff8c;
     border: 1px solid rgba(0,255,140,0.3);
     border-radius: 4px; padding: 0.1rem 0.6rem;
-    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+    font-size: 1.0rem; font-weight: 700; letter-spacing: 0.1em;
 }
 .badge-fail {
     background: rgba(255,60,60,0.12); color: #ff5555;
     border: 1px solid rgba(255,60,60,0.3);
     border-radius: 4px; padding: 0.1rem 0.6rem;
-    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+    font-size: 1.0rem; font-weight: 700; letter-spacing: 0.1em;
 }
 .check-row { display: flex; gap: 0.8rem; margin-top: 0.2rem; }
 .check-key { color: #2a5a6a; min-width: 70px; }
@@ -168,7 +168,7 @@ hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
 
 /* Final result */
 .final-pass {
-    text-align: center; font-size: 1.5rem; font-weight: 700;
+    text-align: center; font-size: 1.8rem; font-weight: 700;
     color: #00ff8c; font-family: 'Rajdhani', sans-serif;
     letter-spacing: 0.15em;
     text-shadow: 0 0 24px rgba(0,255,140,0.5);
@@ -176,7 +176,7 @@ hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
     border: 1px solid rgba(0,255,140,0.2); border-radius: 8px;
 }
 .final-fail {
-    text-align: center; font-size: 1.5rem; font-weight: 700;
+    text-align: center; font-size: 1.8rem; font-weight: 700;
     color: #ff5555; font-family: 'Rajdhani', sans-serif;
     letter-spacing: 0.15em;
     text-shadow: 0 0 24px rgba(255,80,80,0.5);
@@ -474,30 +474,6 @@ def validate_bin(raw: bytes):
 
 # ── UI ────────────────────────────────────────────────────────────────────────
 
-# Sidebar
-with st.sidebar:
-    st.markdown("""
-    <div style="text-align:center; padding:1rem 0 1.5rem 0;">
-        <div style="font-size:2rem;">🔬</div>
-        <div style="font-family:'Rajdhani',sans-serif; font-size:1.1rem;
-                    font-weight:700; color:#00e5ff; letter-spacing:0.1em;">
-            EPS GLOBAL
-        </div>
-        <div style="font-family:'Share Tech Mono',monospace; font-size:0.7rem;
-                    color:#3a6a7a; letter-spacing:0.15em;">
-            TRANSCEIVER VALIDATOR
-        </div>
-    </div>
-    <div class="sidebar-status">
-        <div><span class="dot"></span>SYSTEM ONLINE</div>
-        <div style="margin-top:0.5rem; color:#4a8a9a;">USER&nbsp;&nbsp;&nbsp;&nbsp;Wellyson Mota</div>
-        <div style="color:#4a8a9a;">VERSION&nbsp;&nbsp;v0.1</div>
-        <div style="margin-top:0.8rem; color:#2a4a5a;">SUPPORTED</div>
-        <div style="color:#4a8a9a;">SFP / SFP+</div>
-        <div style="color:#4a8a9a;">QSFP / QSFP+ / QSFP28</div>
-        <div style="color:#4a8a9a;">QSFP-DD / 400G CMIS</div>
-    </div>
-    """, unsafe_allow_html=True)
 
 # Title
 st.markdown("""
@@ -532,7 +508,7 @@ else:
         block_badge = ""
         if is_upper_only:
             block_badge = """
-            <span style="font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+            <span style="font-family:'Share Tech Mono',monospace; font-size:1.4rem;
                          background:rgba(255,160,0,0.12); border:1px solid rgba(255,160,0,0.35);
                          color:#ffa000; border-radius:4px; padding:0.15rem 0.6rem;
                          margin-left:0.5rem; letter-spacing:0.08em;">
@@ -545,7 +521,7 @@ else:
                 0x{results['id_byte']:02X} — {results['t_name']}
             </span>
             <span style="font-family:'Share Tech Mono',monospace;
-                         font-size:0.78rem; color:#2a5a6a;">
+                         font-size:1.05rem; color:#2a5a6a;">
                 {results['family']}
             </span>
             {block_badge}
@@ -598,7 +574,7 @@ else:
             for label, val, is_bad in rows:
                 cls = "check-val-bad" if is_bad else "check-val"
                 rows_html += f'<div class="check-row"><span class="check-key">{label}</span><span class="{cls}">{val}</span></div>'
-            note_html = f'<div style="margin-top:0.5rem;font-size:0.72rem;color:#7a4a2a;">{note}</div>' if note else ""
+            note_html = f'<div style="margin-top:0.5rem;font-size:1.0rem;color:#7a4a2a;">{note}</div>' if note else ""
             return f"""
             <div class="check-block">
                 <div class="check-header">
@@ -706,6 +682,6 @@ else:
             reason_str = " &nbsp;·&nbsp; ".join(reasons)
             st.markdown(
                 f'<div class="final-fail">❌ &nbsp; REJECTED BY SWITCH'
-                f'<div style="font-size:0.8rem;font-weight:400;margin-top:0.4rem;'
+                f'<div style="font-size:1.5rem;font-weight:400;margin-top:0.4rem;'
                 f'letter-spacing:0.05em;color:#ff9999;">{reason_str}</div></div>',
                 unsafe_allow_html=True)
