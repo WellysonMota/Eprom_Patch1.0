@@ -14,152 +14,443 @@ from app.core.constants import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS
 # ── SHARED CSS ────────────────────────────────────────────────────────────────
 SHARED_CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
 
-html, body, [class*="css"] { font-family: 'Rajdhani', sans-serif; }
+/* ── Reset & Base ── */
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 16px;
+    color: #1A1A1A;
+}
 
 .stApp {
-    background-color: #0a0e1a;
-    background-image:
-        radial-gradient(ellipse at 15% 15%, rgba(0,200,255,0.05) 0%, transparent 50%),
-        radial-gradient(ellipse at 85% 85%, rgba(0,255,160,0.04) 0%, transparent 50%);
+    background-color: #E8E8E8;
 }
-[data-testid="stSidebar"] {
-    background-color: #0d1520 !important;
-    border-right: 1px solid #1a2a3a !important;
-}
-[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !important; }
 
-.title-block { padding: 1.8rem 0 0.5rem 0; }
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {
+    background-color: #2A2A2A !important;
+    border-right: 3px solid #B42D27 !important;
+}
+[data-testid="stSidebar"] * {
+    font-family: 'Inter', sans-serif !important;
+    color: #E8E8E8 !important;
+}
+[data-testid="stSidebar"] .stButton button {
+    background-color: #3A3A3A !important;
+    border: 1px solid #555 !important;
+    color: #E8E8E8 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1.0rem !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    text-align: left !important;
+    padding: 0.5rem 0.8rem !important;
+}
+[data-testid="stSidebar"] .stButton button[kind="primary"] {
+    background-color: #B42D27 !important;
+    border-color: #B42D27 !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+[data-testid="stSidebar"] .stButton button:hover {
+    background-color: #B42D27 !important;
+    border-color: #B42D27 !important;
+    color: #FFFFFF !important;
+}
+
+/* ── Title block ── */
+.title-block {
+    background-color: #2A2A2A;
+    border-left: 5px solid #B42D27;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0 4px 4px 0;
+}
 .title-block h1 {
-    font-size: 2.8rem; font-weight: 700; color: #00e5ff;
-    text-shadow: 0 0 30px rgba(0,229,255,0.35);
-    letter-spacing: 0.06em; margin-bottom: 0.1rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 0.03em;
+    margin: 0 0 0.2rem 0;
 }
 .title-block p {
-    color: #3a6a7a; font-size: 1.4rem;
-    font-family: 'Share Tech Mono', monospace;
-    letter-spacing: 0.12em; margin-top: 0;
+    color: #AAAAAA;
+    font-size: 0.9rem;
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 0.05em;
+    margin: 0;
 }
-.section-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1.0rem; letter-spacing: 0.2em;
-    color: #00e5ff; text-transform: uppercase;
-    margin: 1.8rem 0 0.6rem 0;
-    padding-left: 0.6rem; border-left: 2px solid #00e5ff;
-}
-hr.divider { border: none; border-top: 1px solid #1a2a3a; margin: 1.2rem 0; }
 
+/* ── Section labels ── */
+.section-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #777777;
+    text-transform: uppercase;
+    margin: 1.8rem 0 0.6rem 0;
+    padding: 0.3rem 0.6rem;
+    background-color: #DCDCDC;
+    border-left: 3px solid #2E6A9C;
+    border-radius: 0 3px 3px 0;
+}
+
+hr.divider {
+    border: none;
+    border-top: 2px solid #C8C8C8;
+    margin: 1rem 0;
+}
+
+/* ── Inputs / Selectbox ── */
 [data-testid="stSelectbox"] > div,
 [data-testid="stTextInput"] > div > div {
-    background-color: #0d1823 !important;
-    border: 1px solid #1e3a4a !important;
-    border-radius: 6px !important;
-    color: #a0d8ef !important;
-    font-family: 'Share Tech Mono', monospace !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #AAAAAA !important;
+    border-radius: 4px !important;
+    color: #1A1A1A !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1.0rem !important;
+}
+[data-testid="stSelectbox"] > div:focus-within,
+[data-testid="stTextInput"] > div > div:focus-within {
+    border-color: #2E6A9C !important;
+    box-shadow: 0 0 0 2px rgba(46,106,156,0.2) !important;
 }
 label, .stTextInput label, .stSelectbox label {
-    color: #4a8a9a !important;
-    font-family: 'Share Tech Mono', monospace !important;
-    font-size: 0.8rem !important; letter-spacing: 0.08em !important;
-}
-[data-testid="stExpander"] {
-    background-color: #0d1520 !important;
-    border: 1px solid #1a2a3a !important; border-radius: 8px !important;
-}
-[data-testid="stExpander"] summary {
-    color: #4a8a9a !important;
-    font-family: 'Share Tech Mono', monospace !important; font-size: 1.15rem !important;
-}
-[data-testid="stFileUploader"] {
-    border: 1px dashed #1e3a4a !important; border-radius: 8px !important;
-    background: #0d1520 !important; padding: 1rem !important;
-}
-[data-testid="stMetric"] {
-    background: #0d1823; border: 1px solid #1a2a3a;
-    border-radius: 8px; padding: 0.8rem 1rem !important;
-}
-[data-testid="stMetricLabel"] {
-    color: #3a6a7a !important; font-family: 'Share Tech Mono', monospace !important;
-    font-size: 1.0rem !important; letter-spacing: 0.1em !important;
-}
-[data-testid="stMetricValue"] {
-    color: #a0d8ef !important; font-family: 'Rajdhani', sans-serif !important;
-    font-size: 1.5rem !important; font-weight: 700 !important;
-}
-.stCode, [data-testid="stCode"] {
-    background: #060c14 !important; border: 1px solid #1a2a3a !important;
-    border-radius: 6px !important; font-family: 'Share Tech Mono', monospace !important;
-    color: #00e87a !important; font-size: 1.5rem !important;
-}
-.stDownloadButton button {
-    width: 100%;
-    background: rgba(0,229,255,0.08) !important;
-    border: 1px solid rgba(0,229,255,0.3) !important;
-    color: #00e5ff !important; font-family: 'Rajdhani', sans-serif !important;
-    font-weight: 700 !important; font-size: 1.5rem !important;
-    letter-spacing: 0.12em !important; border-radius: 6px !important;
-    padding: 0.6rem !important; transition: all 0.2s ease;
-}
-.stDownloadButton button:hover {
-    background: rgba(0,229,255,0.15) !important;
-    box-shadow: 0 0 20px rgba(0,229,255,0.2) !important;
-}
-.stSuccess {
-    background: rgba(0,255,140,0.07) !important;
-    border: 1px solid rgba(0,255,140,0.25) !important;
-    color: #ccffee !important; border-radius: 6px !important;
-    font-family: 'Share Tech Mono', monospace !important; font-size: 1.15rem !important;
-}
-.stError {
-    background: rgba(255,60,60,0.07) !important;
-    border: 1px solid rgba(255,60,60,0.25) !important;
-    border-radius: 6px !important;
-    font-family: 'Share Tech Mono', monospace !important; font-size: 1.15rem !important;
-}
-.stInfo {
-    background: rgba(0,180,255,0.06) !important;
-    border: 1px solid rgba(0,180,255,0.2) !important;
-    border-radius: 6px !important;
-    font-family: 'Share Tech Mono', monospace !important;
-    font-size: 1.5rem !important; color: #7ac8e8 !important;
-}
-.sig-card {
-    background: #060c14; border: 1px solid #1a2a3a; border-radius: 8px;
-    padding: 1rem 1.2rem; font-family: 'Share Tech Mono', monospace;
-    font-size: 1.5rem; color: #00e87a; word-break: break-all; line-height: 1.8;
-}
-.sig-label {
-    font-size: 1.0rem; color: #3a6a7a;
-    letter-spacing: 0.12em; margin-bottom: 0.3rem;
-}
-.sidebar-status {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1.05rem; color: #3a6a7a;
-    padding: 0.8rem; border: 1px solid #1a2a3a;
-    border-radius: 6px; background: #060c14; line-height: 1.8;
-}
-.sidebar-status .dot {
-    display: inline-block; width: 7px; height: 7px;
-    background: #00e87a; border-radius: 50%;
-    margin-right: 6px; box-shadow: 0 0 6px #00e87a;
+    color: #444444 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
 }
 
-/* ── Nav links in sidebar ── */
-.nav-link {
-    display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.55rem 0.8rem; border-radius: 6px; margin-bottom: 0.3rem;
-    font-family: 'Share Tech Mono', monospace; font-size: 1.5rem;
-    text-decoration: none; transition: background 0.15s ease;
-    border: 1px solid transparent; cursor: pointer;
-    color: #4a8a9a;
+/* ── Expander ── */
+[data-testid="stExpander"] {
+    background-color: #F4F4F4 !important;
+    border: 1px solid #C8C8C8 !important;
+    border-radius: 4px !important;
 }
-.nav-link:hover  { background: rgba(0,229,255,0.07); color: #00e5ff;
-                   border-color: rgba(0,229,255,0.2); }
-.nav-link.active { background: rgba(0,229,255,0.1);  color: #00e5ff;
-                   border-color: rgba(0,229,255,0.3); }
-.nav-icon { font-size: 1.5rem; }
-.nav-label { letter-spacing: 0.08em; }
+[data-testid="stExpander"] summary {
+    color: #444444 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+}
+
+/* ── File uploader ── */
+[data-testid="stFileUploader"] {
+    border: 2px dashed #AAAAAA !important;
+    border-radius: 4px !important;
+    background: #F4F4F4 !important;
+    padding: 1rem !important;
+}
+
+/* ── Metrics ── */
+[data-testid="stMetric"] {
+    background: #FFFFFF;
+    border: 1px solid #C8C8C8;
+    border-top: 3px solid #2E6A9C;
+    border-radius: 4px;
+    padding: 0.8rem 1rem !important;
+}
+[data-testid="stMetricLabel"] {
+    color: #777777 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+}
+[data-testid="stMetricValue"] {
+    color: #1A1A1A !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+}
+
+/* ── Download button ── */
+.stDownloadButton button {
+    width: 100%;
+    background-color: #B42D27 !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+    letter-spacing: 0.06em !important;
+    border-radius: 4px !important;
+    padding: 0.65rem 1rem !important;
+    transition: background-color 0.15s ease;
+}
+.stDownloadButton button:hover {
+    background-color: #8B1F1A !important;
+}
+
+/* ── Alerts ── */
+.stSuccess > div {
+    background-color: #E8F5E9 !important;
+    border-left: 4px solid #2E7D32 !important;
+    color: #1B5E20 !important;
+    border-radius: 0 4px 4px 0 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+}
+.stError > div {
+    background-color: #FFEBEE !important;
+    border-left: 4px solid #B42D27 !important;
+    color: #7F0000 !important;
+    border-radius: 0 4px 4px 0 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.95rem !important;
+}
+.stWarning > div {
+    background-color: #FFF3E0 !important;
+    border-left: 4px solid #E65100 !important;
+    color: #BF360C !important;
+    border-radius: 0 4px 4px 0 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.95rem !important;
+}
+.stInfo > div {
+    background-color: #E3F2FD !important;
+    border-left: 4px solid #2E6A9C !important;
+    color: #0D47A1 !important;
+    border-radius: 0 4px 4px 0 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.95rem !important;
+}
+
+/* ── Code blocks ── */
+.stCode, [data-testid="stCode"] {
+    background: #F4F4F4 !important;
+    border: 1px solid #C8C8C8 !important;
+    border-radius: 4px !important;
+    font-family: 'Roboto Mono', monospace !important;
+    color: #1A1A1A !important;
+    font-size: 0.9rem !important;
+}
+
+/* ── Sig card (MD5/CRC display) ── */
+.sig-card {
+    background: #FFFFFF;
+    border: 1px solid #C8C8C8;
+    border-left: 3px solid #2E6A9C;
+    border-radius: 0 4px 4px 0;
+    padding: 0.8rem 1rem;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.95rem;
+    color: #1A1A1A;
+    word-break: break-all;
+    line-height: 1.8;
+}
+.sig-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #777777;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+}
+
+/* ── Sidebar status block ── */
+.sidebar-status {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    color: #AAAAAA;
+    padding: 0.8rem;
+    border: 1px solid #444444;
+    border-radius: 4px;
+    background: #1A1A1A;
+    line-height: 2.0;
+}
+.sidebar-status .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: #4CAF50;
+    border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 5px #4CAF50;
+}
+
+/* ── Check blocks (validator cards) ── */
+.check-block {
+    background: #FFFFFF;
+    border: 1px solid #C8C8C8;
+    border-top: 3px solid #C8C8C8;
+    border-radius: 0 0 4px 4px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.6rem;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.88rem;
+}
+.check-block.pass-block { border-top-color: #2E7D32; }
+.check-block.fail-block { border-top-color: #B42D27; }
+
+.check-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 0.5rem;
+}
+.check-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #444444;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.badge-pass {
+    background-color: #2E7D32;
+    color: #FFFFFF;
+    border-radius: 3px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.08em;
+}
+.badge-fail {
+    background-color: #B42D27;
+    color: #FFFFFF;
+    border-radius: 3px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.08em;
+}
+.check-row {
+    display: flex; gap: 0.8rem;
+    margin-top: 0.2rem;
+    border-top: 1px solid #F0F0F0;
+    padding-top: 0.2rem;
+}
+.check-key {
+    color: #888888;
+    min-width: 80px;
+    font-size: 0.82rem;
+}
+.check-val { color: #1A1A1A; word-break: break-all; }
+.check-val-bad { color: #B42D27; font-weight: 600; word-break: break-all; }
+
+/* ── Final result banners ── */
+.final-pass {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.08em;
+    padding: 1rem;
+    background-color: #2E7D32;
+    border-radius: 4px;
+    border-left: 6px solid #1B5E20;
+}
+.final-fail {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.08em;
+    padding: 1rem;
+    background-color: #B42D27;
+    border-radius: 4px;
+    border-left: 6px solid #7F0000;
+}
+.final-warn {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.08em;
+    padding: 1rem;
+    background-color: #E65100;
+    border-radius: 4px;
+    border-left: 6px solid #BF360C;
+}
+
+/* ── ID badges (transceiver family) ── */
+.id-badge {
+    display: inline-block;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.2rem 0.8rem;
+    border-radius: 3px;
+    margin-right: 0.5rem;
+    border: 1px solid;
+}
+.id-sfp    { background: #E3F2FD; border-color: #2E6A9C; color: #1A3A6B; }
+.id-qsfp   { background: #F3E5F5; border-color: #6A1B9A; color: #4A148C; }
+.id-400g   { background: #FFF3E0; border-color: #E65100; color: #BF360C; }
+.id-unknown{ background: #F5F5F5; border-color: #9E9E9E; color: #616161; }
+
+/* ── Field cards (page2) ── */
+.field-card {
+    background: #FFFFFF;
+    border: 1px solid #C8C8C8;
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.6rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+}
+.field-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #777777;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+}
+.field-value { color: #1A1A1A; font-size: 1.05rem; font-weight: 600; word-break: break-all; }
+.field-raw   { color: #AAAAAA; font-size: 0.82rem; font-family: 'Roboto Mono', monospace; margin-top: 0.2rem; }
+
+.match-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.45rem 0; border-bottom: 1px solid #F0F0F0;
+    font-size: 0.95rem;
+}
+.match-pn   { color: #1A1A1A; font-size: 1.0rem; font-weight: 700; }
+.match-desc { color: #555555; font-size: 0.9rem; }
+.match-clei { color: #888888; font-family: 'Roboto Mono', monospace; font-size: 0.85rem; }
+
+.badge-match {
+    background-color: #2E7D32; color: #FFFFFF;
+    border-radius: 3px; padding: 0.15rem 0.6rem;
+    font-size: 0.75rem; font-weight: 700;
+    font-family: 'Inter', sans-serif; letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+.badge-nomatch {
+    background-color: #B42D27; color: #FFFFFF;
+    border-radius: 3px; padding: 0.15rem 0.6rem;
+    font-size: 0.75rem; font-weight: 700;
+    font-family: 'Inter', sans-serif; letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+.badge-warn {
+    background-color: #E65100; color: #FFFFFF;
+    border-radius: 3px; padding: 0.15rem 0.6rem;
+    font-size: 0.75rem; font-weight: 700;
+    font-family: 'Inter', sans-serif; letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.hex-dump {
+    font-family: 'Roboto Mono', monospace; font-size: 0.88rem;
+    background: #F4F4F4; border: 1px solid #C8C8C8; border-radius: 4px;
+    padding: 0.8rem 1rem; color: #444444; line-height: 1.8;
+    overflow-x: auto; white-space: pre;
+}
+.info-mono {
+    font-family: 'Roboto Mono', monospace; font-size: 0.9rem;
+    color: #AAAAAA; text-align: center; padding-top: 0.5rem;
+}
 </style>
 """
 
@@ -241,6 +532,12 @@ def page_patcher():
                         file_name=f"patched_{sn}_cisco.bin",
                         mime="application/octet-stream",
                     )
+
+                    # ── String for EEPROM IDE ─────────────────────────────
+                    st.markdown('<div class="section-label">07 — String (Copy for EEPROM IDE)</div>',
+                                unsafe_allow_html=True)
+                    st.caption("Single-line hex string — paste directly into your EEPROM programming IDE.")
+                    st.code(bytes(patched_bin).hex().upper(), language="text")
                 except Exception as e:
                     st.error(f"⚠️  Processing Error: {e}")
                     st.info("Check algorithms.py — certify it is accepting rebrand options.")
@@ -288,10 +585,23 @@ def page_page2():
 
 
 # ── NAVIGATION ────────────────────────────────────────────────────────────────
+def page_tools():
+    tools_path = current_dir / "tools_app.py"
+    if tools_path.exists():
+        with open(tools_path) as f:
+            code = f.read()
+        code = code.replace("st.set_page_config(", "# st.set_page_config(")
+        exec(code, {"__name__": "__tools__"})
+    else:
+        st.error("tools_app.py not found in the same directory.")
+        st.info("Place tools_app.py alongside main.py and restart.")
+
+
 PAGES = {
-    "patcher":   {"icon": "🔐", "label": "Patch Tool",         "fn": page_patcher},
-    "validator": {"icon": "🔬", "label": "Transceiver Validator","fn": page_validator},
-    "page2":     {"icon": "📋", "label": "Page 02h Validator",  "fn": page_page2},
+    "patcher":   {"icon": "🔐", "label": "Patch Tool",           "fn": page_patcher},
+    "validator": {"icon": "🔬", "label": "Transceiver Validator", "fn": page_validator},
+    "page2":     {"icon": "📋", "label": "Page 02h Validator",    "fn": page_page2},
+    "tools":     {"icon": "🔧", "label": "Tools",                 "fn": page_tools},
 }
 
 def main():
@@ -309,23 +619,28 @@ def main():
     with st.sidebar:
         # Logo + brand
         st.markdown("""
-        <div style="text-align:center; padding:1rem 0 1.5rem 0;">
-            <div style="font-size:2.8rem;">🔐</div>
-            <div style="font-family:'Rajdhani',sans-serif; font-size:1.4rem;
-                        font-weight:700; color:#00e5ff; letter-spacing:0.1em;">
-                EPS GLOBAL
-            </div>
-            <div style="font-family:'Share Tech Mono',monospace; font-size:0.95rem;
-                        color:#3a6a7a; letter-spacing:0.15em;">
-                TRANSCEIVER TOOLS
+        <div style="padding:1rem 0.5rem 1.5rem 0.5rem;border-bottom:1px solid #444;margin-bottom:1rem;">
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="background:#B42D27;width:4px;height:2.5rem;border-radius:2px;flex-shrink:0;"></div>
+                <div>
+                    <div style="font-family:'Inter',sans-serif;font-size:1.2rem;
+                                font-weight:700;color:#FFFFFF;letter-spacing:0.05em;line-height:1.2;">
+                        EPS GLOBAL
+                    </div>
+                    <div style="font-family:'Roboto Mono',monospace;font-size:0.75rem;
+                                color:#AAAAAA;letter-spacing:0.1em;margin-top:0.1rem;">
+                        TRANSCEIVER TOOLS
+                    </div>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         # Navigation label
         st.markdown(
-            '<div style="font-family:&#39;Share Tech Mono&#39;,monospace;font-size:0.95rem;'
-            'color:#2a4a5a;letter-spacing:0.2em;padding:0 0.4rem 0.5rem 0.4rem;">NAVIGATION</div>',
+            '<div style="font-family:Inter,sans-serif;font-size:0.72rem;font-weight:700;'
+            'color:#AAAAAA;letter-spacing:0.15em;padding:0 0.4rem 0.5rem 0.4rem;'
+            'text-transform:uppercase;">NAVIGATION</div>',
             unsafe_allow_html=True
         )
 
@@ -351,8 +666,8 @@ def main():
         st.markdown("""
         <div class="sidebar-status">
             <div><span class="dot"></span>SYSTEM ONLINE</div>
-            <div style="margin-top:0.5rem;color:#4a8a9a;">USER&nbsp;&nbsp;&nbsp;&nbsp;Wellyson Mota</div>
-            <div style="color:#4a8a9a;">VERSION&nbsp;&nbsp;v0.1</div>
+            <div style="margin-top:0.4rem;color:#AAAAAA;">USER&nbsp;&nbsp;&nbsp;&nbsp;Wellyson Mota</div>
+            <div style="color:#AAAAAA;">VERSION&nbsp;&nbsp;v0.1</div>
         </div>
         """, unsafe_allow_html=True)
 
