@@ -2,7 +2,8 @@ import streamlit as st
 import sys
 from pathlib import Path
 
-#updated 20/06
+
+#updated 20/06 ajustando a page de teste de campo
 
 # --- 🛠️ PATH FIX ---
 current_dir = Path(__file__).resolve().parent

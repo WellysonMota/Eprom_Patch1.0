@@ -3,6 +3,9 @@ FTLC3351/3352R3PL1 — Field Encoding Tool  v0.3
 EPS Global · Standalone · SFF-8636 Rev 2.12
 """
 
+
+#updated 20/06 ajustando a page de teste de campo
+
 import streamlit as st
 import hashlib, struct, binascii, re
 from io import StringIO, BytesIO
