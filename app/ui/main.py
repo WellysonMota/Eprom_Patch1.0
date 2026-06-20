@@ -2,6 +2,8 @@ import streamlit as st
 import sys
 from pathlib import Path
 
+#updated 20/06
+
 # --- 🛠️ PATH FIX ---
 current_dir = Path(__file__).resolve().parent
 project_root = current_dir.parent.parent
@@ -584,7 +586,6 @@ def page_page2():
         st.info("Place page2_validator_app.py alongside main.py and restart.")
 
 
-# ── NAVIGATION ────────────────────────────────────────────────────────────────
 def page_tools():
     tools_path = current_dir / "tools_app.py"
     if tools_path.exists():
@@ -597,11 +598,25 @@ def page_tools():
         st.info("Place tools_app.py alongside main.py and restart.")
 
 
+def page_ftlc():
+    ftlc_path = current_dir / "ftlc_field_encoder.py"
+    if ftlc_path.exists():
+        with open(ftlc_path) as f:
+            code = f.read()
+        code = code.replace("st.set_page_config(", "# st.set_page_config(")
+        exec(code, {"__name__": "__ftlc__"})
+    else:
+        st.error("ftlc_field_encoder.py not found in the same directory.")
+        st.info("Place ftlc_field_encoder.py alongside main.py and restart.")
+
+
+# ── NAVIGATION ────────────────────────────────────────────────────────────────
 PAGES = {
-    "patcher":   {"icon": "🔐", "label": "Patch Tool",           "fn": page_patcher},
+    "patcher":   {"icon": "🔐", "label": "Patch Tool",            "fn": page_patcher},
     "validator": {"icon": "🔬", "label": "Transceiver Validator", "fn": page_validator},
     "page2":     {"icon": "📋", "label": "Page 02h Validator",    "fn": page_page2},
     "tools":     {"icon": "🔧", "label": "Tools",                 "fn": page_tools},
+    "ftlc":      {"icon": "📡", "label": "Field Encoder (FTLC)",  "fn": page_ftlc},
 }
 
 def main():
