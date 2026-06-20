@@ -4,9 +4,6 @@ EPS Global · Standalone · SFF-8636 Rev 2.12
 Fluxo: Dump único -> Checklist -> Identidade/Patch -> Output -> Verificação Final
 """
 
-
-#Nova pagina para procedimentos em campo
-
 import streamlit as st
 import hashlib, struct, binascii, re
 
@@ -280,7 +277,6 @@ with mi2:
 # 3 — CHECKLIST DE AJUSTES (diagnóstico, current vs target)
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown('<div class="sec">📋 3 — Checklist de Ajustes</div>', unsafe_allow_html=True)
-st.caption("Diagnóstico informativo — os valores-alvo abaixo já são aplicados automaticamente na geração das strings finais (seção 6), independente do estado atual.")
 
 cur_129 = src_upper.get(129, 0)
 cur_147 = src_upper.get(147, 0)
@@ -293,8 +289,14 @@ cur_b0_81 = pb0.get(0x81, None)
 cur_ch_msb = p12.get(0x88, None)
 cur_ch_lsb = p12.get(0x89, None)
 
+st.markdown("**✅ Automático — já incluído na string da seção 6 (Upper Page)**")
+st.caption("Não precisa gravar nada manualmente para estes campos — basta colar a string da Upper Page.")
 status_row("Power Class (Extended ID)", "Upper 0x81 (129)", f"0x{cur_129:02X}", "0xCF", cur_129==0xCF)
 status_row("Device Technology", "Upper 0x93 (147)", f"0x{cur_147:02X}", "0x0D", cur_147==0x0D)
+
+st.markdown("")
+st.markdown("**✋ Manual — gravar separadamente no IDE**")
+st.caption("Lower Page inteira (gravação manual nesta fase) + registros isolados em B0h/Page12h que não fazem parte de nenhuma string.")
 status_row("Max Power", "Lower 0x6B (107)", f"0x{cur_6b:02X}", "0x37 (5.5W)", cur_6b==0x37)
 status_row("DDM Enable", "Lower 0x69 (105)", f"0x{cur_69:02X}", "0x01", cur_69==0x01)
 status_row("DDM Capabilities", "Lower 0x6A (106)", f"0x{cur_6a:02X}", "0x1F", cur_6a==0x1F)
@@ -361,17 +363,45 @@ with id1:
 with id2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("**Part Number**")
-    st.caption(f"Base: `{BASE_PN.rstrip()}`")
+
+    # Deriva o modelo a partir do PN ORIGINAL (Page FFh se presente, senão Page 00h),
+    # removendo qualquer sufixo "-C"/"-CX" que já possa estar lá (ex: dump de unidade
+    # que já passou por uma tentativa de encoding anterior).
+    pn_model_detected = pn_orig.strip()
+    for suf in [f"-C{l}" for l in "ABCD"] + ["-C"]:
+        if pn_model_detected.endswith(suf):
+            pn_model_detected = pn_model_detected[:-len(suf)]
+            break
+    if not pn_model_detected:
+        pn_model_detected = "FTLC3351R3PL1"  # fallback se dump não tiver PN legível
+        st.warning("PN não detectado no dump — usando fallback FTLC3351R3PL1")
+
+    lock_3351 = st.checkbox("Travar em FTLC3351R3PL1 (padrão Apticom, mesmo em unidades 3352)",
+                             value=False,
+                             help="Apticom grava sempre '3351' no PN, mesmo em hardware 3352 — "
+                                  "PN não afeta o DSP, é só autenticação. Desmarcado = usa o modelo "
+                                  "real detectado na Page FFh.")
+    pn_model_base = "FTLC3351R3PL1" if lock_3351 else pn_model_detected
+
+    if pn_model_base != pn_model_detected:
+        st.caption(f"Detectado na Page FFh: `{pn_model_detected}` → travado para `{pn_model_base}`")
+    else:
+        st.caption(f"Base detectada (Page FFh): `{pn_model_detected}`")
+
+    base_with_c = (pn_model_base + "-C")[:15]
+    pn_suf_labels_dyn = ["Nenhum (PN base)"] + [
+        f"-{l}  →  {base_with_c}{l}" for l in "ABCD"
+    ] + ["Manual..."]
+
     pn_suf_idx = st.selectbox("Sufixo PN", options=range(len(PN_SUFFIXES)),
-                               format_func=lambda i: PN_SUF_LABELS[i], index=0)
+                               format_func=lambda i: pn_suf_labels_dyn[i], index=0)
     pn_sel = PN_SUFFIXES[pn_suf_idx]
     pn_manual = ""
     if pn_sel == "Manual...":
-        pn_manual = st.text_input("PN completo (manual)", value=BASE_PN.rstrip(), max_chars=16)
-    base15 = BASE_PN.rstrip()
+        pn_manual = st.text_input("PN completo (manual)", value=base_with_c, max_chars=16)
     if pn_sel == "Manual...": pn_final_str = pn_manual[:16]
-    elif pn_sel == "Nenhum (PN base)": pn_final_str = BASE_PN
-    else: pn_final_str = (base15 + pn_sel)[:16]
+    elif pn_sel == "Nenhum (PN base)": pn_final_str = base_with_c
+    else: pn_final_str = (base_with_c + pn_sel)[:16]
     pn_16 = pad16(pn_final_str)
     pn_disp = pn_16.decode("ascii","replace")
     st.markdown(f"**Final:** <span class='preview'>{pn_disp}</span>", unsafe_allow_html=True)
@@ -396,17 +426,31 @@ md5_res, crc32_res = calc_cisco_patch(sn_16, manu_id)
 upper_bytes = page_to_bytes128(upper_enc, 128)
 lower_bytes = page_to_bytes128(lower_enc, 0)
 page02_bytes = PAGE02_FIXED
+full_page00_bytes = lower_bytes + upper_bytes
 upper_hexstr = upper_bytes.hex().upper()
 lower_hexstr = lower_bytes.hex().upper()
 page02_hexstr = page02_bytes.hex().upper()
+full_page00_hexstr = full_page00_bytes.hex().upper()
 
 st.markdown("---")
 st.markdown('<div class="sec-final">📋  6 — STRINGS FINAIS — Copiar e gravar no IDE Coherent/Finisar</div>',
             unsafe_allow_html=True)
 
+# Password reminder
+st.markdown("""<div class="warn-box">
+<b>🔑 SFF — Unlock and Save to Edit Registers</b><br>
+Unlock Password: Page 00 Register 0x7B (4 bytes): <code>556E6C6B</code> ("Unlk")<br>
+Save Password:&nbsp;&nbsp;&nbsp;Page 00 Register 0x7B (4 bytes): <code>53617665</code> ("Save")
+</div>""", unsafe_allow_html=True)
+
 # LOWER
 st.markdown('<div class="output-block">', unsafe_allow_html=True)
 st.markdown('<div class="output-title">🟢 LOWER PAGE · 128 bytes</div>', unsafe_allow_html=True)
+st.markdown("""<div class="warn-box">
+⚠️ <b>NÃO copiar esta string no fluxo normal</b> — a Lower Page é gravada manualmente nesta fase
+(ver checklist seção 3). Esta string serve só de referência/backup, ou caso precise montar a
+<b>Full Page 00 (256 bytes)</b> abaixo para usar no Revelprogs.
+</div>""", unsafe_allow_html=True)
 st.caption("Modificações: 0x69=01 (DDM Enable) | 0x6A=1F (DDM Cap) | 0x6B=37 (Max Power 5.5W) | 0x71=0E (Near/Far End)")
 st.markdown(f'<div class="hex-out-lp">{lower_hexstr}</div>', unsafe_allow_html=True)
 lc1, lc2 = st.columns([4,1])
@@ -439,6 +483,17 @@ with pc2:
     st.download_button("📥 .bin", data=page02_bytes, file_name="page02_fixed.bin",
                         mime="application/octet-stream", use_container_width=True, key="dl_page02")
 st.markdown('</div>', unsafe_allow_html=True)
+
+# FULL PAGE 00 (Lower+Upper concatenada) — backup para Revelprogs
+with st.expander("📦 Full Page 00 (Lower+Upper concatenada, 256 bytes) — só para Revelprogs, se precisar"):
+    st.caption("Lower (128) + Upper (128) = 256 bytes. Use apenas se o Revelprogs pedir a página completa "
+               "de uma vez em vez de Lower/Upper separadas.")
+    st.markdown(f'<div class="hex-out">{full_page00_hexstr}</div>', unsafe_allow_html=True)
+    fp1, fp2c = st.columns([4,1])
+    with fp1: st.code(full_page00_hexstr, language=None)
+    with fp2c:
+        st.download_button("📥 .bin", data=full_page00_bytes, file_name=f"full_page00_{sn_disp.strip()}.bin",
+                            mime="application/octet-stream", use_container_width=True, key="dl_full_page00")
 
 # B0h + Canal instructions
 st.markdown('<div class="output-block">', unsafe_allow_html=True)
