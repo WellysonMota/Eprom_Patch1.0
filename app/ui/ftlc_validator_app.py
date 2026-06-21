@@ -28,6 +28,13 @@ TARGET_P1E_FD = 0x02 # Page 1Eh:0xFD ModulePowerClassOverride — confirmado em 
 TARGET_P1E_FLEXTUNE_EN   = 0x01 # Page 1Eh:0xC8 FlexTuneEnable — padrão Apticom (configurável conforme preferência do cliente)
 TARGET_P1E_FLEXTUNE_GRID = 0x05 # Page 1Eh:0xCB FlexTuneGrid — 0101b = 100GHz, padrão Apticom
 
+def p1e_fd_meaning(val):
+    return {
+        0x00: "⚠️ SFF padrão — depende do host setar a bit (estado quebrado típico)",
+        0x01: "Bypass TOTAL — ignora o host (mais agressivo, não validado em campo)",
+        0x02: "Power Class 5-7 — valor VALIDADO em todas as unidades funcionando",
+    }.get(val, f"valor não documentado (0x{val:02X})")
+
 PAGE02_FIXED = bytes([
     0x49,0x4E,0x55,0x49,0x41,0x4B,0x44,0x45,0x41,0x41,0x31,0x30,0x2D,0x33,0x32,0x34,
     0x38,0x2D,0x30,0x31,0x56,0x30,0x31,0x20,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -118,6 +125,8 @@ def validate_dump(text: str, expected_channel: tuple = None) -> dict:
     sn_bytes = bytes([upper.get(196+i,0x20) for i in range(16)])
 
     checks = []
+    cur_p1e_fd, cur_ften, cur_fgrid = 0, 0, 0
+    cur_b0_81 = pb0.get(0x81, 0) if pb0 else 0
 
     # ── Estrutura física ────────────────────────────────────────────────
     checks.append(("Power Class (Upper 0x81)", upper.get(129,0)==TARGET_B81,
@@ -185,9 +194,12 @@ def validate_dump(text: str, expected_channel: tuple = None) -> dict:
         checks.append(("Page 02h (CLEI Cisco)", False, "ausente", "esperado presente"))
 
     all_ok = all(c[1] for c in checks)
+    cisco_key_hex = CISCO_KEYS.get(manu_id, b"").hex().upper()
     return {
         "error": None, "sn": sn, "pn": pn, "manu_id": manu_id,
         "checks": checks, "all_ok": all_ok,
+        "p1e_fd": cur_p1e_fd, "flextune_en": cur_ften, "flextune_grid": cur_fgrid,
+        "b0_81": cur_b0_81, "cisco_key_hex": cisco_key_hex,
     }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -273,6 +285,18 @@ for r in results:
         st.markdown(f'<span class="{badge_cls}">{badge_txt}</span>', unsafe_allow_html=True)
         st.markdown(f"**Manu_ID:** `0x{r['manu_id']:02X}`")
         st.markdown("")
+
+        ft_txt = "🟢 Ligado" if r["flextune_en"]==1 else "⚪ Desligado"
+        grid_txt = "100GHz" if r["flextune_grid"]==0x05 else ("50GHz" if r["flextune_grid"]==0x04 else f"0x{r['flextune_grid']:02X}")
+        wave_txt = "🟢 Ligado (0x01)" if r["b0_81"]==1 else f"🔴 Desligado (0x{r['b0_81']:02X})"
+        st.markdown(f"""<div class="output-block" style="background:#F7F9FB;border:1px solid #ccc;border-radius:6px;padding:12px;margin-bottom:10px">
+<b>📋 Resumo da Unidade</b><br>
+<b>ModulePowerClassOverride:</b> 0x{r['p1e_fd']:02X} — {p1e_fd_meaning(r['p1e_fd'])}<br>
+<b>FlexTune:</b> {ft_txt} &nbsp;|&nbsp; Grid: {grid_txt}<br>
+<b>NominalWavelengthControl (B0h:0x81):</b> {wave_txt}<br>
+<b>Cisco Key (Manu_ID 0x{r['manu_id']:02X}):</b> <code style="font-size:11px">{r['cisco_key_hex'] or 'desconhecida'}</code>
+</div>""", unsafe_allow_html=True)
+
         for label, ok, cur, tgt in r["checks"]:
             icon = "✅" if ok else "❌"
             col = "#1A5A2A" if ok else "#B42D27"

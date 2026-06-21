@@ -30,6 +30,13 @@ TARGET_B93  = 0x0D   # Device Technology
 TARGET_P1E_FD = 0x02 # Page 1Eh:0xFD ModulePowerClassOverride — confirmado em unidade -8dBm real funcionando (2611W388G); ausente (0x00) nas unidades problema
 TARGET_P1E_FLEXTUNE_EN   = 0x01 # Page 1Eh:0xC8 FlexTuneEnable — padrão Apticom (configurável conforme preferência do cliente)
 TARGET_P1E_FLEXTUNE_GRID = 0x05 # Page 1Eh:0xCB FlexTuneGrid — 0101b = 100GHz, padrão Apticom
+
+def p1e_fd_meaning(val):
+    return {
+        0x00: "⚠️ SFF padrão — depende do host setar a bit (estado quebrado típico)",
+        0x01: "Bypass TOTAL — ignora o host (mais agressivo, não validado em campo)",
+        0x02: "Power Class 5-7 — valor VALIDADO em todas as unidades funcionando",
+    }.get(val, f"valor não documentado (0x{val:02X})")
 TARGET_BC2  = 0x3D
 TARGET_BC3  = 0xDB
 
@@ -460,26 +467,40 @@ Unlock Password: Page 00 Register 0x7B (4 bytes): <code>556E6C6B</code> ("Unlk")
 Save Password:&nbsp;&nbsp;&nbsp;Page 00 Register 0x7B (4 bytes): <code>53617665</code> ("Save")
 </div>""", unsafe_allow_html=True)
 
-# LOWER
-st.markdown('<div class="output-block">', unsafe_allow_html=True)
-st.markdown('<div class="output-title">🟢 LOWER PAGE · 128 bytes</div>', unsafe_allow_html=True)
-st.markdown("""<div class="warn-box">
-⚠️ <b>NÃO copiar esta string no fluxo normal</b> — a Lower Page é gravada manualmente nesta fase
-(ver checklist seção 3). Esta string serve só de referência/backup, ou caso precise montar a
-<b>Full Page 00 (256 bytes)</b> abaixo para usar no Revelprogs.
+# Resumo da Unidade — visão consolidada do que vai ser gravado
+magic_key_hex = CISCO_KEYS[manu_id].hex().upper()
+ch_resumo = f"{ch_label} (Page12h 0x{ch_msb_val:02X} {ch_lsb_val:02X})" if ch_valid else "não definido"
+st.markdown(f"""<div class="output-block" style="background:#F7F9FB">
+<div class="output-title">📋 Resumo da Unidade — o que vai ser gravado</div>
+<b>SN:</b> {sn_disp.strip()} &nbsp;|&nbsp; <b>PN:</b> {pn_disp.strip()} &nbsp;|&nbsp; <b>Manu_ID:</b> 0x{manu_id:02X}<br>
+<b>Cisco Key:</b> <code style="font-size:11px">{magic_key_hex}</code><br>
+<b>ModulePowerClassOverride (Pg1E:0xFD):</b> 0x{TARGET_P1E_FD:02X} — {p1e_fd_meaning(TARGET_P1E_FD)}<br>
+<b>FlexTune:</b> 0x{TARGET_P1E_FLEXTUNE_EN:02X} (ligado) &nbsp;|&nbsp; Grid: 0x{TARGET_P1E_FLEXTUNE_GRID:02X} (100GHz) — confirmar com cliente<br>
+<b>NominalWavelengthControl (B0h:0x81):</b> 0x01 (ligado)<br>
+<b>Canal:</b> {ch_resumo}
 </div>""", unsafe_allow_html=True)
-st.caption("Modificações: 0x69=01 (DDM Enable) | 0x6A=1F (DDM Cap) | 0x6B=37 (Max Power 5.5W) | 0x71=0E (Near/Far End)")
-st.markdown(f'<div class="hex-out-lp">{lower_hexstr}</div>', unsafe_allow_html=True)
-lc1, lc2 = st.columns([4,1])
-with lc1: st.code(lower_hexstr, language=None)
-with lc2:
-    st.download_button("📥 .bin", data=lower_bytes, file_name=f"lower_{sn_disp.strip()}.bin",
-                        mime="application/octet-stream", use_container_width=True, key="dl_lower")
-st.markdown('</div>', unsafe_allow_html=True)
+
+# LOWER — escondida por padrão, só libera com confirmação explícita
+with st.expander("🟢 LOWER PAGE · 128 bytes  (clique pra abrir — NÃO é o fluxo normal)", expanded=False):
+    st.warning("⚠️ Você quer realmente copiar a Lower Page? Ela é gravada manualmente nesta fase "
+               "(ver checklist seção 3). Confirme abaixo para liberar a string.")
+    confirm_lower = st.checkbox("Sim, quero ver/copiar a Lower Page mesmo assim", key="confirm_lower_page")
+    if confirm_lower:
+        st.markdown('<div class="output-block">', unsafe_allow_html=True)
+        st.markdown("**📍 Inserir em:** `Page : 00h (Lower)` · **Endereço inicial:** `0x00`")
+        st.caption("Modificações: 0x69=01 (DDM Enable) | 0x6A=1F (DDM Cap) | 0x6B=37 (Max Power 5.5W) | 0x71=0E (Near/Far End)")
+        st.markdown(f'<div class="hex-out-lp">{lower_hexstr}</div>', unsafe_allow_html=True)
+        lc1, lc2 = st.columns([4,1])
+        with lc1: st.code(lower_hexstr, language=None)
+        with lc2:
+            st.download_button("📥 .bin", data=lower_bytes, file_name=f"lower_{sn_disp.strip()}.bin",
+                                mime="application/octet-stream", use_container_width=True, key="dl_lower")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # UPPER
 st.markdown('<div class="output-block">', unsafe_allow_html=True)
 st.markdown('<div class="output-title">🔴 UPPER PAGE 00h · 128 bytes</div>', unsafe_allow_html=True)
+st.markdown("**📍 Inserir em:** `Page : 00h (Upper)` · **Endereço inicial:** `0x80`")
 st.caption(f"SN: {sn_disp.strip()} | PN: {pn_disp.strip()} | Manu_ID: 0x{manu_id:02X} | CC_BASE: 0x{upper_enc.get(191,0):02X} | CC_EXT: 0x{upper_enc.get(223,0):02X}")
 st.markdown(f'<div class="hex-out">{upper_hexstr}</div>', unsafe_allow_html=True)
 uc1, uc2 = st.columns([4,1])
@@ -492,6 +513,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 # PAGE 02h
 st.markdown('<div class="output-block">', unsafe_allow_html=True)
 st.markdown('<div class="output-title">🔵 PAGE 02h · 128 bytes · CLEI Cisco (fixo — igual para as 12 unidades)</div>', unsafe_allow_html=True)
+st.markdown("**📍 Inserir em:** `Page : 02h` · **Endereço inicial:** `0x80`")
 st.caption("CLEI: INUIAKDEAA (QSFP-100G-ZR-S) — payload validado contra dump real Apticom, não depende do SN")
 st.markdown(f'<div class="hex-out-p2">{page02_hexstr}</div>', unsafe_allow_html=True)
 pc1, pc2 = st.columns([4,1])
@@ -503,6 +525,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # FULL PAGE 00 (Lower+Upper concatenada) — backup para Revelprogs
 with st.expander("📦 Full Page 00 (Lower+Upper concatenada, 256 bytes) — só para Revelprogs, se precisar"):
+    st.markdown("**📍 Inserir em:** `Page : 00h (completa)` · **Endereço inicial:** `0x00`")
     st.caption("Lower (128) + Upper (128) = 256 bytes. Use apenas se o Revelprogs pedir a página completa "
                "de uma vez em vez de Lower/Upper separadas.")
     st.markdown(f'<div class="hex-out">{full_page00_hexstr}</div>', unsafe_allow_html=True)
