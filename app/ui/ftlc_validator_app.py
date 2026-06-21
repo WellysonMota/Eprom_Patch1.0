@@ -8,8 +8,6 @@ e confere contra os valores-alvo conhecidos. Não depende de sessão do Encoder.
 import streamlit as st
 import hashlib, struct, binascii, re
 
-#Nova pagina para procedimentos em campo
-
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTS — mesmos valores-alvo validados no Field Encoder
 # ─────────────────────────────────────────────────────────────────────────────
@@ -26,6 +24,7 @@ TARGET_B81 = 0xCF   # Power Class
 TARGET_B93 = 0x0D   # Device Technology
 LP_TARGETS = {0x69: 0x01, 0x6A: 0x1F, 0x6B: 0x37, 0x71: 0x0E}
 B0_TARGETS = {0x80: 0x01, 0x81: 0x01}
+TARGET_P1E_FD = 0x02 # Page 1Eh:0xFD ModulePowerClassOverride — confirmado em unidade -8dBm real funcionando
 
 PAGE02_FIXED = bytes([
     0x49,0x4E,0x55,0x49,0x41,0x4B,0x44,0x45,0x41,0x41,0x31,0x30,0x2D,0x33,0x32,0x34,
@@ -103,6 +102,7 @@ def validate_dump(text: str, expected_channel: tuple = None) -> dict:
     p0 = pages.get(0,{})
     pb0, plow = pages.get(0xB0,{}), pages.get("lower",{})
     p12, p02 = pages.get(0x12,{}), pages.get(0x02,{})
+    p1e = pages.get(0x1E,{})
     # IMPORTANTE: validação sempre lê a Page 00h — é a única página que o switch
     # realmente consulta. Page FFh (quando presente) é só um backup do estado
     # ORIGINAL pré-patch que algumas ferramentas de dump preservam — NUNCA usar
@@ -131,6 +131,13 @@ def validate_dump(text: str, expected_channel: tuple = None) -> dict:
             checks.append((f"B0h 0x{addr:02X}", cur==target, f"0x{cur:02X}", f"0x{target:02X}"))
     else:
         checks.append(("Page B0h presente", False, "ausente", "presente"))
+
+    if p1e:
+        cur_p1e_fd = p1e.get(0xFD, 0)
+        checks.append(("ModulePowerClassOverride ⚠️ OBRIGATÓRIO", cur_p1e_fd==TARGET_P1E_FD,
+                        f"0x{cur_p1e_fd:02X}", f"0x{TARGET_P1E_FD:02X}"))
+    else:
+        checks.append(("ModulePowerClassOverride (Pg1E:0xFD)", False, "Page 1Eh ausente", f"0x{TARGET_P1E_FD:02X}"))
 
     if expected_channel:
         ch_msb, ch_lsb = expected_channel

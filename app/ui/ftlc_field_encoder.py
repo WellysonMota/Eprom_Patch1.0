@@ -27,6 +27,7 @@ OUI         = [0xAC, 0x80, 0xD6]
 EXT_SPEC    = 0x27
 TARGET_B81  = 0xCF   # Extended ID — Power Class PC7/5.0W
 TARGET_B93  = 0x0D   # Device Technology
+TARGET_P1E_FD = 0x02 # Page 1Eh:0xFD ModulePowerClassOverride — confirmado em unidade -8dBm real funcionando (2611W388G); ausente (0x00) nas unidades problema
 TARGET_BC2  = 0x3D
 TARGET_BC3  = 0xDB
 
@@ -237,6 +238,7 @@ if 0 not in pages:
 
 p0, pfff, pb0, plow = pages.get(0,{}), pages.get(0xFF,{}), pages.get(0xB0,{}), pages.get("lower",{})
 p12 = pages.get(0x12, {})
+p1e = pages.get(0x1E, {})
 src_upper = pfff if pfff else p0
 src_lower = plow
 
@@ -246,6 +248,7 @@ fw_maj  = pb0.get(0xD0,0); fw_min = pb0.get(0xD1,0)
 is_3352 = "3352" in pn_orig; is_3351 = "3351" in pn_orig
 b0_present  = len(pb0) > 0
 p12_present = len(p12) > 0
+p1e_present = len(p1e) > 0
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2 — MODULE INFO
@@ -307,6 +310,10 @@ status_row("LowMemConfigSelect", "B0h 0x80 (128)",
 status_row("NominalWavelengthControl", "B0h 0x81 (129)",
            f"0x{cur_b0_81:02X}" if cur_b0_81 is not None else "—", "0x01",
            cur_b0_81==0x01, "" if b0_present else "(B0h ausente no dump)")
+cur_p1e_fd = p1e.get(0xFD, None)
+status_row("ModulePowerClassOverride ⚠️ OBRIGATÓRIO", "Page 1Eh 0xFD (253)",
+           f"0x{cur_p1e_fd:02X}" if cur_p1e_fd is not None else "—", f"0x{TARGET_P1E_FD:02X}",
+           cur_p1e_fd==TARGET_P1E_FD, "" if p1e_present else "(Page 1Eh ausente no dump)")
 ch_cur_str = f"{cur_ch_msb:02X} {cur_ch_lsb:02X}" if (cur_ch_msb is not None and cur_ch_lsb is not None) else "—"
 status_row("Canal (definido na seção 4)", "Page12h 0x88/0x89", ch_cur_str, "ver seção 4 ↓", False,
            "" if p12_present else "(Page 12h ausente no dump)")
@@ -495,13 +502,14 @@ with st.expander("📦 Full Page 00 (Lower+Upper concatenada, 256 bytes) — só
         st.download_button("📥 .bin", data=full_page00_bytes, file_name=f"full_page00_{sn_disp.strip()}.bin",
                             mime="application/octet-stream", use_container_width=True, key="dl_full_page00")
 
-# B0h + Canal instructions
+# B0h + Page 1Eh + Canal instructions
 st.markdown('<div class="output-block">', unsafe_allow_html=True)
 st.markdown('<div class="output-title">🔩 Registros individuais — gravar separadamente no IDE (NÃO são páginas completas)</div>', unsafe_allow_html=True)
 ri1, ri2 = st.columns(2)
 with ri1:
     st.markdown(f"**B0h : 0x80** = `0x01` — LowMemConfigSelect")
     st.markdown(f"**B0h : 0x81** = `0x01` — NominalWavelengthControl")
+    st.markdown(f"**Page 1Eh : 0xFD** = `0x{TARGET_P1E_FD:02X}` — ModulePowerClassOverride ⚠️ **OBRIGATÓRIO**")
 with ri2:
     if ch_valid:
         st.markdown(f"**Page 12h : 0x88** = `0x{ch_msb_val:02X}` — Canal MSB")
