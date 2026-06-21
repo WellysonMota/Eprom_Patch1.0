@@ -25,6 +25,8 @@ TARGET_B93 = 0x0D   # Device Technology
 LP_TARGETS = {0x69: 0x01, 0x6A: 0x1F, 0x6B: 0x37, 0x71: 0x0E}
 B0_TARGETS = {0x80: 0x01, 0x81: 0x01}
 TARGET_P1E_FD = 0x02 # Page 1Eh:0xFD ModulePowerClassOverride — confirmado em unidade -8dBm real funcionando
+TARGET_P1E_FLEXTUNE_EN   = 0x01 # Page 1Eh:0xC8 FlexTuneEnable — padrão Apticom (configurável conforme preferência do cliente)
+TARGET_P1E_FLEXTUNE_GRID = 0x05 # Page 1Eh:0xCB FlexTuneGrid — 0101b = 100GHz, padrão Apticom
 
 PAGE02_FIXED = bytes([
     0x49,0x4E,0x55,0x49,0x41,0x4B,0x44,0x45,0x41,0x41,0x31,0x30,0x2D,0x33,0x32,0x34,
@@ -136,6 +138,12 @@ def validate_dump(text: str, expected_channel: tuple = None) -> dict:
         cur_p1e_fd = p1e.get(0xFD, 0)
         checks.append(("ModulePowerClassOverride ⚠️ OBRIGATÓRIO", cur_p1e_fd==TARGET_P1E_FD,
                         f"0x{cur_p1e_fd:02X}", f"0x{TARGET_P1E_FD:02X}"))
+        cur_ften = p1e.get(0xC8, 0)
+        cur_fgrid = p1e.get(0xCB, 0)
+        checks.append(("ℹ️ FlexTuneEnable (informativo, não afeta aprovação)", True,
+                        f"0x{cur_ften:02X}", f"ref: 0x{TARGET_P1E_FLEXTUNE_EN:02X}"))
+        checks.append(("ℹ️ FlexTuneGrid (informativo, não afeta aprovação)", True,
+                        f"0x{cur_fgrid:02X}", f"ref: 0x{TARGET_P1E_FLEXTUNE_GRID:02X} (100GHz)"))
     else:
         checks.append(("ModulePowerClassOverride (Pg1E:0xFD)", False, "Page 1Eh ausente", f"0x{TARGET_P1E_FD:02X}"))
 

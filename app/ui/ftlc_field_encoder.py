@@ -28,6 +28,8 @@ EXT_SPEC    = 0x27
 TARGET_B81  = 0xCF   # Extended ID — Power Class PC7/5.0W
 TARGET_B93  = 0x0D   # Device Technology
 TARGET_P1E_FD = 0x02 # Page 1Eh:0xFD ModulePowerClassOverride — confirmado em unidade -8dBm real funcionando (2611W388G); ausente (0x00) nas unidades problema
+TARGET_P1E_FLEXTUNE_EN   = 0x01 # Page 1Eh:0xC8 FlexTuneEnable — padrão Apticom (configurável conforme preferência do cliente)
+TARGET_P1E_FLEXTUNE_GRID = 0x05 # Page 1Eh:0xCB FlexTuneGrid — 0101b = 100GHz, padrão Apticom
 TARGET_BC2  = 0x3D
 TARGET_BC3  = 0xDB
 
@@ -314,6 +316,14 @@ cur_p1e_fd = p1e.get(0xFD, None)
 status_row("ModulePowerClassOverride ⚠️ OBRIGATÓRIO", "Page 1Eh 0xFD (253)",
            f"0x{cur_p1e_fd:02X}" if cur_p1e_fd is not None else "—", f"0x{TARGET_P1E_FD:02X}",
            cur_p1e_fd==TARGET_P1E_FD, "" if p1e_present else "(Page 1Eh ausente no dump)")
+cur_p1e_ften = p1e.get(0xC8, None)
+status_row("FlexTuneEnable (configurável c/ cliente)", "Page 1Eh 0xC8 (200)",
+           f"0x{cur_p1e_ften:02X}" if cur_p1e_ften is not None else "—", f"0x{TARGET_P1E_FLEXTUNE_EN:02X}",
+           cur_p1e_ften==TARGET_P1E_FLEXTUNE_EN, "" if p1e_present else "(Page 1Eh ausente no dump)")
+cur_p1e_fgrid = p1e.get(0xCB, None)
+status_row("FlexTuneGrid (configurável c/ cliente)", "Page 1Eh 0xCB (203)",
+           f"0x{cur_p1e_fgrid:02X}" if cur_p1e_fgrid is not None else "—", f"0x{TARGET_P1E_FLEXTUNE_GRID:02X} (100GHz)",
+           cur_p1e_fgrid==TARGET_P1E_FLEXTUNE_GRID, "" if p1e_present else "(Page 1Eh ausente no dump)")
 ch_cur_str = f"{cur_ch_msb:02X} {cur_ch_lsb:02X}" if (cur_ch_msb is not None and cur_ch_lsb is not None) else "—"
 status_row("Canal (definido na seção 4)", "Page12h 0x88/0x89", ch_cur_str, "ver seção 4 ↓", False,
            "" if p12_present else "(Page 12h ausente no dump)")
@@ -510,6 +520,8 @@ with ri1:
     st.markdown(f"**B0h : 0x80** = `0x01` — LowMemConfigSelect")
     st.markdown(f"**B0h : 0x81** = `0x01` — NominalWavelengthControl")
     st.markdown(f"**Page 1Eh : 0xFD** = `0x{TARGET_P1E_FD:02X}` — ModulePowerClassOverride ⚠️ **OBRIGATÓRIO**")
+    st.markdown(f"**Page 1Eh : 0xC8** = `0x{TARGET_P1E_FLEXTUNE_EN:02X}` — FlexTuneEnable (confirmar com cliente)")
+    st.markdown(f"**Page 1Eh : 0xCB** = `0x{TARGET_P1E_FLEXTUNE_GRID:02X}` — FlexTuneGrid / 100GHz (confirmar com cliente)")
 with ri2:
     if ch_valid:
         st.markdown(f"**Page 12h : 0x88** = `0x{ch_msb_val:02X}` — Canal MSB")
