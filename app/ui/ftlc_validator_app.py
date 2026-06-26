@@ -104,14 +104,20 @@ CHAN_50GHZ = {
      58:(60,196.0,1529.55),   59:(60.5,196.05,1529.16), 60:(61,196.1,1528.77),
 }
 
-def resolve_channel(ch_raw, flextune_grid):
-    """Return (itu_ch, freq_thz, wavelength_nm, grid_label) or None."""
-    # treat ch_raw as signed 16-bit
+GRID_SPACING_MAP = {
+    0x0: "3.125GHz", 0x1: "6.25GHz", 0x2: "12.5GHz", 0x3: "25GHz",
+    0x4: "50GHz",    0x5: "100GHz",  0x6: "33GHz",   0x7: "75GHz",
+}
+
+def resolve_channel(ch_raw, grid_spacing_code=0x5):
+    """Return (itu_ch, freq_thz, wavelength_nm, grid_label) or None.
+    grid_spacing_code = bits 7-4 of Page 12h:0x80 (GridSpacingTx)
+    Default 0x5 = 100GHz. Completely independent from FlexTuneGrid (Page 1Eh:0xCB)."""
     if ch_raw > 32767: ch_raw -= 65536
-    if flextune_grid == 0x04:  # 50GHz
+    if grid_spacing_code == 0x4:   # 50GHz
         info = CHAN_50GHZ.get(ch_raw)
         label = "50GHz"
-    else:                       # default 100GHz
+    else:                           # 100GHz (0x5) or unknown → default 100GHz
         info = CHAN_100GHZ.get(ch_raw)
         label = "100GHz"
     if info:
@@ -190,11 +196,15 @@ def validate_dump(text: str, expected_channel: tuple = None) -> dict:
     date_code = asc(upper,212,8).strip()
 
     # ── Channel ──────────────────────────────────────────────────────────────
-    cur_fgrid = p1e.get(0xCB, 0x05) if p1e else 0x05
-    ch_msb    = p12.get(0x88, 0) if p12 else 0
-    ch_lsb    = p12.get(0x89, 0) if p12 else 0
-    ch_raw    = (ch_msb << 8) | ch_lsb
-    ch_info   = resolve_channel(ch_raw, cur_fgrid) if p12 else None
+    # GridSpacingTx = Page 12h:0x80 bits 7-4 (independent from FlexTuneGrid)
+    cur_fgrid    = p1e.get(0xCB, 0x05) if p1e else 0x05   # FlexTune grid (separate)
+    grid_raw     = p12.get(0x80, 0x50) if p12 else 0x50    # GridSpacingTx byte
+    grid_code    = (grid_raw >> 4) & 0x0F                   # bits 7-4
+    ch_msb       = p12.get(0x88, 0) if p12 else 0
+    ch_lsb       = p12.get(0x89, 0) if p12 else 0
+    ch_raw       = (ch_msb << 8) | ch_lsb
+    ch_info      = resolve_channel(ch_raw, grid_code) if p12 else None
+    grid_spacing_label = GRID_SPACING_MAP.get(grid_code, f"code 0x{grid_code:X}")
 
     checks = []
     cur_p1e_fd, cur_ften = 0, 0
@@ -285,6 +295,7 @@ def validate_dump(text: str, expected_channel: tuple = None) -> dict:
         "b0_81": pb0.get(0x81, 0) if pb0 else 0,
         "cisco_key_hex": cisco_key_hex,
         "cisco_crc32": cisco_crc32_str,
+        "grid_spacing_label": grid_spacing_label,
     }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -429,7 +440,8 @@ for r in results:
             ("Cisco CRC32",                    f"<code style='font-size:12px;font-weight:bold'>{r['cisco_crc32']}</code>"),
             ("ModulePowerClassOverride (Pg1E:0xFD)",
              f"<b>0x{r['p1e_fd']:02X}</b> — {pwr_lbl}"),
-            ("FlexTune",                       f"{ft_lbl} &nbsp;|&nbsp; Grid: {g_lbl}"),
+            ("Channel Grid (Page12h:0x80)",        r.get("grid_spacing_label","100GHz") + " (GridSpacingTx — fixed channel grid)"),
+            ("FlexTune",                       f"{ft_lbl} &nbsp;|&nbsp; FlexTune Grid: {g_lbl}"),
             ("NominalWavelengthControl (B0h:0x81)", w_lbl),
         ]
 
