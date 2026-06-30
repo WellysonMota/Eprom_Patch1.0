@@ -444,3 +444,62 @@ else:
     with s2:
         st.markdown("**📄 File B — String**")
         st.code(data_b.hex().upper(), language="text")
+
+# ── Blank the Part ──────────────────────────────────────────────────────────────
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
+st.markdown('<div class="section-label">06 — Blank The Part (Restore EEPROM to Stock)</div>',
+            unsafe_allow_html=True)
+
+st.markdown("""
+<div style="background:#FFFFFF;border:1px solid #C8C8C8;border-radius:4px;
+            padding:1rem 1.2rem;margin-bottom:1rem;font-family:'Inter',sans-serif;
+            font-size:0.86rem;color:#333333;">
+  <b style="color:#2E6A9C;letter-spacing:0.05em;">PROCEDURE — BLANK THE PART</b>
+  <ol style="margin:0.6rem 0 0 1.1rem;padding:0;line-height:1.9;">
+    <li>Prepare I2C section in the GUI and type Unlock/Save Code.</li>
+    <li>Read Page FF 80 (Size: 128 bytes).</li>
+    <li>Copy values from Page FF 80 (128 bytes).</li>
+    <li>Paste/Insert values from Page FF 80 to Page 00 80 (128 bytes).</li>
+    <li>Erase all of Page 02 80 (128 bytes) — <b style="color:#B42D27;">copy the FF block below and Write.</b></li>
+    <li>Adjust minimal remaining details.</li>
+    <li>Backup the EEPROM.</li>
+  </ol>
+</div>
+""", unsafe_allow_html=True)
+
+blank_col1, blank_col2 = st.columns(2)
+
+with blank_col1:
+    st.markdown("""
+    <div class="hex-panel-header left" style="border-radius:4px 4px 0 0;">
+        🧹 128 bytes FF &nbsp;<span style="color:#AAAAAA;font-weight:400;">— Page 02 80 erase (step 5)</span>
+    </div>
+    """, unsafe_allow_html=True)
+    ff_128 = "FF" * 128
+    st.code(ff_128, language="text")
+    st.download_button("📥 Download .bin (128 bytes FF)",
+                        data=bytes([0xFF] * 128),
+                        file_name="blank_128_FF.bin",
+                        mime="application/octet-stream",
+                        key="dl_ff128")
+
+with blank_col2:
+    st.markdown("""
+    <div class="hex-panel-header right" style="border-radius:4px 4px 0 0;">
+        🧹 256 bytes FF &nbsp;<span style="color:#AAAAAA;font-weight:400;">— full page erase</span>
+    </div>
+    """, unsafe_allow_html=True)
+    ff_256 = "FF" * 256
+    st.code(ff_256, language="text")
+    st.download_button("📥 Download .bin (256 bytes FF)",
+                        data=bytes([0xFF] * 256),
+                        file_name="blank_256_FF.bin",
+                        mime="application/octet-stream",
+                        key="dl_ff256")
+
+st.markdown("""
+<p style="font-family:'Inter',sans-serif;font-size:0.78rem;color:#999999;margin-top:0.6rem;">
+  Click the copy icon on the top-right corner of each code block to copy the full hex string,
+  then paste directly into the Coherent GUI and Write.
+</p>
+""", unsafe_allow_html=True)
