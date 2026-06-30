@@ -469,14 +469,48 @@ st.markdown("""
 
 blank_col1, blank_col2 = st.columns(2)
 
-with blank_col1:
-    st.markdown("""
-    <div class="hex-panel-header left" style="border-radius:4px 4px 0 0;">
-        🧹 128 bytes FF &nbsp;<span style="color:#AAAAAA;font-weight:400;">— Page 02 80 erase (step 5)</span>
+def ff_copy_block(label, n_bytes, accent, key):
+    """Self-contained copy widget inside an isolated iframe — avoids any
+    ambiguity with other st.code() copy icons elsewhere on the page."""
+    ff_hex = "FF" * n_bytes
+    component_html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;">
+      <div style="background:#2A2A2A;color:#FFFFFF;padding:0.5rem 1rem;
+                  font-size:0.85rem;font-weight:700;letter-spacing:0.05em;
+                  border-left:4px solid {accent};border-radius:4px 4px 0 0;">
+        🧹 {label}
+      </div>
+      <textarea id="ta_{key}" readonly
+        style="width:100%;height:90px;box-sizing:border-box;resize:none;
+               font-family:'Roboto Mono',monospace;font-size:0.78rem;
+               background:#FFFFFF;color:#1A1A1A;border:1px solid #C8C8C8;
+               border-top:none;padding:0.6rem;word-break:break-all;">{ff_hex}</textarea>
+      <button id="btn_{key}" onclick="copy_{key}()"
+        style="margin-top:0.5rem;width:100%;padding:0.55rem;background:{accent};
+               color:#FFFFFF;border:none;border-radius:4px;font-family:Inter,sans-serif;
+               font-size:0.85rem;font-weight:700;letter-spacing:0.05em;cursor:pointer;">
+        📋 COPY {n_bytes} BYTES (FF)
+      </button>
+      <div id="msg_{key}" style="height:1.2rem;margin-top:0.3rem;font-size:0.8rem;
+                                  font-family:Inter,sans-serif;color:#2E7D32;font-weight:600;"></div>
     </div>
-    """, unsafe_allow_html=True)
-    ff_128 = "FF" * 128
-    st.code(ff_128, language="text")
+    <script>
+      function copy_{key}() {{
+        const ta = document.getElementById("ta_{key}");
+        ta.select();
+        navigator.clipboard.writeText(ta.value).then(function() {{
+          document.getElementById("msg_{key}").innerText = "✅ Copied — {n_bytes} bytes ready to paste.";
+        }}).catch(function() {{
+          document.execCommand("copy");
+          document.getElementById("msg_{key}").innerText = "✅ Copied — {n_bytes} bytes ready to paste.";
+        }});
+      }}
+    </script>
+    """
+    components.html(component_html, height=190)
+
+with blank_col1:
+    ff_copy_block("128 bytes FF — Page 02 80 erase (step 5)", 128, "#2E6A9C", "ff128")
     st.download_button("📥 Download .bin (128 bytes FF)",
                         data=bytes([0xFF] * 128),
                         file_name="blank_128_FF.bin",
@@ -484,13 +518,7 @@ with blank_col1:
                         key="dl_ff128")
 
 with blank_col2:
-    st.markdown("""
-    <div class="hex-panel-header right" style="border-radius:4px 4px 0 0;">
-        🧹 256 bytes FF &nbsp;<span style="color:#AAAAAA;font-weight:400;">— full page erase</span>
-    </div>
-    """, unsafe_allow_html=True)
-    ff_256 = "FF" * 256
-    st.code(ff_256, language="text")
+    ff_copy_block("256 bytes FF — full page erase", 256, "#B42D27", "ff256")
     st.download_button("📥 Download .bin (256 bytes FF)",
                         data=bytes([0xFF] * 256),
                         file_name="blank_256_FF.bin",
@@ -499,7 +527,7 @@ with blank_col2:
 
 st.markdown("""
 <p style="font-family:'Inter',sans-serif;font-size:0.78rem;color:#999999;margin-top:0.6rem;">
-  Click the copy icon on the top-right corner of each code block to copy the full hex string,
-  then paste directly into the Coherent GUI and Write.
+  Click the blue/red "COPY" button — each one is isolated and only copies its own block,
+  no risk of grabbing other values from the page. Then paste directly into the Coherent GUI and Write.
 </p>
 """, unsafe_allow_html=True)
