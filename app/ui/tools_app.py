@@ -497,13 +497,19 @@ def ff_copy_block(label, n_bytes, accent, key):
     <script>
       function copy_{key}() {{
         const ta = document.getElementById("ta_{key}");
+        ta.focus();
         ta.select();
-        navigator.clipboard.writeText(ta.value).then(function() {{
-          document.getElementById("msg_{key}").innerText = "✅ Copied — {n_bytes} bytes ready to paste.";
-        }}).catch(function() {{
-          document.execCommand("copy");
-          document.getElementById("msg_{key}").innerText = "✅ Copied — {n_bytes} bytes ready to paste.";
-        }});
+        ta.setSelectionRange(0, ta.value.length);
+        try {{
+          const ok = document.execCommand("copy");
+          if (ok) {{
+            document.getElementById("msg_{key}").innerText = "✅ Copied — {n_bytes} bytes ready to paste.";
+          }} else {{
+            throw new Error("execCommand returned false");
+          }}
+        }} catch (err) {{
+          document.getElementById("msg_{key}").innerText = "❌ Copy failed — select the text above and press Ctrl+C manually.";
+        }}
       }}
     </script>
     """
