@@ -622,6 +622,19 @@ def page_ftlc_validator():
         st.info("Place ftlc_validator_app.py alongside main.py and restart.")
 
 
+def page_arista():
+    # Segue o mesmo padrão de page_tools/page_ftlc: arquivo externo, set_page_config comentado
+    arista_path = current_dir / "arista_encoder_app.py"
+    if arista_path.exists():
+        with open(arista_path) as f:
+            code = f.read()
+        code = code.replace("st.set_page_config(", "# st.set_page_config(")
+        exec(code, {"__name__": "__arista__"})
+    else:
+        st.error("arista_encoder_app.py not found in the same directory.")
+        st.info("Place arista_encoder_app.py alongside main.py and restart.")
+
+
 # ── NAVIGATION ────────────────────────────────────────────────────────────────
 PAGES = {
     "patcher":   {"icon": "🔐", "label": "Patch Tool",            "fn": page_patcher},
@@ -630,6 +643,7 @@ PAGES = {
     "tools":     {"icon": "🔧", "label": "Tools",                 "fn": page_tools},
     "ftlc":      {"icon": "📡", "label": "Field Encoder (FTLC)",  "fn": page_ftlc},
     "ftlc_val":  {"icon": "✅", "label": "FTLC Validator",        "fn": page_ftlc_validator},
+    "arista":    {"icon": "🅰️", "label": "Arista Encoder",        "fn": page_arista},
 }
 
 def main():
