@@ -48,38 +48,99 @@ def page_bulk():
                                                  key="bulk_pn")
 
     # ── Section 04 — Serial Numbers ───────────────────────────────────────────
-    st.markdown('<div class="section-label">04 — Serial Numbers (up to 20 units)</div>',
-                unsafe_allow_html=True)
-    st.caption("Fill in the serial numbers for each unit. Blank fields are skipped.")
+    st.markdown('<div class="section-label">04 — Serial Numbers</div>', unsafe_allow_html=True)
 
-    serial_numbers = []
-    cols_per_row   = 4
-    rows           = 5   # 4 × 5 = 20 fields
-    idx            = 0
-    for r in range(rows):
-        cols = st.columns(cols_per_row)
-        for c in range(cols_per_row):
-            idx += 1
-            with cols[c]:
-                sn = st.text_input(f"SN {idx:02d}", key=f"bulk_sn_{idx:02d}",
-                                   placeholder=f"Unit {idx:02d} SN")
-                serial_numbers.append(sn.strip())
+    # ── Input mode selector ───────────────────────────────────────────────────
+    input_mode = st.radio(
+        "Input method",
+        ["📄  Upload File (TXT / CSV / Excel)", "✏️  Fill Manually (up to 20 fields)"],
+        horizontal=True, key="bulk_input_mode",
+        label_visibility="collapsed",
+    )
 
-    # Filter out empty entries
-    valid_sns = [(i+1, sn) for i, sn in enumerate(serial_numbers) if sn]
+    # ── Suffix for ALL SNs ────────────────────────────────────────────────────
+    suf_col, _ = st.columns([1, 3])
+    with suf_col:
+        sn_suffix = st.text_input(
+            "Global suffix (appended to every SN)",
+            placeholder="Ex: -1   or   -2   or   leave blank",
+            key="bulk_suffix",
+        ).strip()
 
-    st.markdown("")
+    sns_raw: list[str] = []
+
+    # ── File upload mode ──────────────────────────────────────────────────────
+    if "Upload" in input_mode:
+        sn_file = st.file_uploader(
+            "Drop a TXT (one SN per line), CSV or Excel (.xlsx) file here",
+            type=["txt", "csv", "xlsx"],
+            key="bulk_sn_file",
+        )
+        if sn_file:
+            try:
+                fname = sn_file.name.lower()
+                if fname.endswith(".xlsx"):
+                    import openpyxl
+                    wb   = openpyxl.load_workbook(sn_file, data_only=True)
+                    ws   = wb.active
+                    sns_raw = [str(row[0].value).strip()
+                               for row in ws.iter_rows(min_row=1)
+                               if row[0].value and str(row[0].value).strip()]
+                elif fname.endswith(".csv"):
+                    import csv, io as _io
+                    text = sn_file.read().decode("utf-8", errors="replace")
+                    reader = csv.reader(_io.StringIO(text))
+                    sns_raw = [row[0].strip() for row in reader
+                               if row and row[0].strip()]
+                else:  # .txt
+                    text = sn_file.read().decode("utf-8", errors="replace")
+                    sns_raw = [l.strip() for l in text.splitlines() if l.strip()]
+
+                st.success(f"✅  {len(sns_raw)} serial number(s) loaded from file.")
+                # Preview
+                with st.expander(f"Preview — {len(sns_raw)} SN(s) loaded", expanded=False):
+                    for i, s in enumerate(sns_raw, 1):
+                        display = f"{s}{sn_suffix}" if sn_suffix else s
+                        st.markdown(f"&nbsp;&nbsp;`{i:02d}` → `{display}`",
+                                    unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"⚠️  Could not parse file: {e}")
+
+    # ── Manual entry mode ─────────────────────────────────────────────────────
+    else:
+        st.caption("Fill in the serial numbers for each unit. Blank fields are skipped.")
+        cols_per_row = 4
+        idx          = 0
+        for _ in range(5):   # 5 rows × 4 cols = 20 fields
+            cols = st.columns(cols_per_row)
+            for c in range(cols_per_row):
+                idx += 1
+                with cols[c]:
+                    sn = st.text_input(f"SN {idx:02d}", key=f"bulk_sn_{idx:02d}",
+                                       placeholder=f"Unit {idx:02d}")
+                    if sn.strip():
+                        sns_raw.append(sn.strip())
+
+    # ── Apply suffix and build final list ─────────────────────────────────────
+    valid_sns = [(i+1, f"{sn}{sn_suffix}") for i, sn in enumerate(sns_raw) if sn]
+
+    if sns_raw and sn_suffix:
+        st.info(f"Suffix **{sn_suffix!r}** will be appended → "
+                f"e.g. `{sns_raw[0]}{sn_suffix}`")
+
     if not valid_sns:
-        st.info("Fill in at least one Serial Number to enable batch generation.")
+        st.info("Provide at least one Serial Number to enable batch generation.")
 
     # ── Section 05 — Generate ─────────────────────────────────────────────────
     st.markdown('<div class="section-label">05 — Generate Batch</div>', unsafe_allow_html=True)
+    st.caption(f"{len(valid_sns)} unit(s) ready to generate.")
 
     generate = st.button("⚡  GENERATE BATCH",
                           disabled=(base_file is None or len(valid_sns) == 0),
                           type="primary", use_container_width=True)
 
     if generate and base_file and valid_sns:
+        base_file.seek(0)
         base_bytes = base_file.read()
         if len(base_bytes) < 256:
             st.error("⚠️  Invalid base file — must have at least 256 bytes.")
