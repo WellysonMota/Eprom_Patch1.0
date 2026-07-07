@@ -4,7 +4,7 @@ from pathlib import Path
 
 #updated 20/06
 
-# --- 🛠️ PATH FIX --- Commit 0707
+# --- 🛠️ PATH FIX ---
 current_dir = Path(__file__).resolve().parent
 project_root = current_dir.parent.parent
 if str(project_root) not in sys.path:
@@ -635,15 +635,28 @@ def page_arista():
         st.info("Place arista_encoder_app.py alongside main.py and restart.")
 
 
+def page_arista_validator():
+    validator_path = current_dir / "arista_validator_app.py"
+    if validator_path.exists():
+        with open(validator_path) as f:
+            code = f.read()
+        code = code.replace("st.set_page_config(", "# st.set_page_config(")
+        exec(code, {"__name__": "__arista_validator__"})
+    else:
+        st.error("arista_validator_app.py not found in the same directory.")
+        st.info("Place arista_validator_app.py alongside main.py and restart.")
+
+
 # ── NAVIGATION ────────────────────────────────────────────────────────────────
 PAGES = {
-    "patcher":   {"icon": "🔐", "label": "Patch Tool",            "fn": page_patcher},
-    "validator": {"icon": "🔬", "label": "Transceiver Validator", "fn": page_validator},
-    "page2":     {"icon": "📋", "label": "Page 02h Validator",    "fn": page_page2},
-    "tools":     {"icon": "🔧", "label": "Tools",                 "fn": page_tools},
-    "ftlc":      {"icon": "📡", "label": "Field Encoder (FTLC)",  "fn": page_ftlc},
-    "ftlc_val":  {"icon": "✅", "label": "FTLC Validator",        "fn": page_ftlc_validator},
-    "arista":    {"icon": "🅰️", "label": "Arista Encoder",        "fn": page_arista},
+    "patcher":    {"icon": "🔐", "label": "Patch Tool",            "fn": page_patcher},
+    "validator":  {"icon": "🔬", "label": "Transceiver Validator", "fn": page_validator},
+    "page2":      {"icon": "📋", "label": "Page 02h Validator",    "fn": page_page2},
+    "tools":      {"icon": "🔧", "label": "Tools",                 "fn": page_tools},
+    "ftlc":       {"icon": "📡", "label": "Field Encoder (FTLC)",  "fn": page_ftlc},
+    "ftlc_val":   {"icon": "✅", "label": "FTLC Validator",        "fn": page_ftlc_validator},
+    "arista":     {"icon": "🅰️", "label": "Arista Encoder",        "fn": page_arista},
+    "arista_val": {"icon": "🅰️", "label": "Arista Validator",      "fn": page_arista_validator},
 }
 
 def main():
