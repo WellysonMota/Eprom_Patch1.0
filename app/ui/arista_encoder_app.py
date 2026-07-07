@@ -25,7 +25,7 @@ import zlib
 import streamlit as st
 
 # ---------------------------------------------------------------------------
-# Constantes de campo (endereçamento absoluto SFF-8636, igual usado no projeto)
+# Constantes de campo (endereçamento absoluto SFF-8636, igual usado no projeto aaaa
 # ---------------------------------------------------------------------------
 VENDOR_NAME_OFF, VENDOR_NAME_LEN = 148, 16
 VENDOR_PN_OFF, VENDOR_PN_LEN = 168, 16
