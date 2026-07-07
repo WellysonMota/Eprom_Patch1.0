@@ -245,16 +245,25 @@ if uploaded is not None:
 
         bin_bytes = bytes(patched)
         base_name = uploaded.name.rsplit(".", 1)[0]
+
+        st.markdown("---")
+        st.subheader("📋 Copiar direto para a Coherent IDE")
+        st.caption(
+            "Cole essa string inteira no campo \"String\" da Coherent EEPROM Programming IDE. "
+            "Use o ícone de copiar no canto do bloco abaixo."
+        )
+        hex_string = bin_bytes.hex().upper()
+        st.code(hex_string, language="text")
+
+        st.markdown("---")
         st.download_button(
             "Baixar .bin patchado",
             data=bin_bytes,
             file_name=f"{base_name}_ARISTA.bin",
             mime="application/octet-stream",
         )
-
-        hex_string = bin_bytes.hex().upper()
         st.download_button(
-            "Baixar string hex (formato Coherent IDE)",
+            "Baixar string hex (.txt)",
             data=hex_string,
             file_name=f"{base_name}_ARISTA.txt",
             mime="text/plain",
