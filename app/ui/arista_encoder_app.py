@@ -245,26 +245,22 @@ if uploaded is not None:
 
         bin_bytes = bytes(patched)
         base_name = uploaded.name.rsplit(".", 1)[0]
+        page00_bytes = bin_bytes[128:256]  # só a Page00h (abs 0x80-0xFF), 128 bytes
 
         st.markdown("---")
-        st.subheader("📋 Copiar direto para a Coherent IDE")
+        st.subheader("📋 Page00h (128 bytes) — copiar para a Coherent IDE")
         st.caption(
-            "Cole essa string inteira no campo \"String\" da Coherent EEPROM Programming IDE. "
-            "Use o ícone de copiar no canto do bloco abaixo."
+            "Só os 128 bytes de 0x80 a 0xFF. Seleciona tudo (Ctrl+A) dentro da caixa "
+            "abaixo e copia (Ctrl+C) — mais confiável que o ícone de copiar."
         )
-        hex_string = bin_bytes.hex().upper()
-        st.code(hex_string, language="text")
+        page00_hex = page00_bytes.hex().upper()
+        st.text_area("Page00h hex string", value=page00_hex, height=100, label_visibility="collapsed")
+        st.code(page00_hex, language="text")
 
         st.markdown("---")
         st.download_button(
-            "Baixar .bin patchado",
+            "Baixar .bin patchado (arquivo completo)",
             data=bin_bytes,
             file_name=f"{base_name}_ARISTA.bin",
             mime="application/octet-stream",
-        )
-        st.download_button(
-            "Baixar string hex (.txt)",
-            data=hex_string,
-            file_name=f"{base_name}_ARISTA.txt",
-            mime="text/plain",
         )
