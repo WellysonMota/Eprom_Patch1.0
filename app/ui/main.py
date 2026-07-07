@@ -11,7 +11,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from app.core.algorithms import apply_cisco_patch, calculate_sff_checksum
-from app.core.constants import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS
+from app.core.constants  import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS
 
 # ── SHARED CSS ────────────────────────────────────────────────────────────────
 SHARED_CSS = """
@@ -289,9 +289,25 @@ def page_arista_validator():
         st.info("Place arista_validator_app.py alongside main.py and restart.")
 
 
+def page_bulk():
+    bulk_path = current_dir / "bulk_encoder_app.py"
+    if bulk_path.exists():
+        with open(bulk_path) as f:
+            code = f.read()
+        code = code.replace("st.set_page_config(", "# st.set_page_config(")
+        # Execute and call page_bulk() from inside the loaded module
+        ns = {"__name__": "__bulk__"}
+        exec(code, ns)
+        ns["page_bulk"]()
+    else:
+        st.error("bulk_encoder_app.py not found in the same directory.")
+        st.info("Place bulk_encoder_app.py alongside main.py and restart.")
+
+
 # ── NAVIGATION ────────────────────────────────────────────────────────────────
 PAGES = {
     "patcher":    {"icon": "🔐", "label": "Patch Tool",            "fn": page_patcher},
+    "bulk":       {"icon": "⚡", "label": "Bulk Code Generator",   "fn": page_bulk},
     "validator":  {"icon": "🔬", "label": "Transceiver Validator", "fn": page_validator},
     "page2":      {"icon": "📋", "label": "Page 02h Validator",    "fn": page_page2},
     "tools":      {"icon": "🔧", "label": "Tools",                 "fn": page_tools},

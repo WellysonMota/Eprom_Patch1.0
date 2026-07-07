@@ -131,6 +131,13 @@ def apply_cisco_patch(binary_data, magic_key_hex, manu_id_hex,
     distance_str, _ = calculate_reach(data, family)
     t_type        = TRANSCEIVER_IDENTIFIERS.get(identifier, f"QSFP (0x{identifier:02X})")
 
+    # ── Fix: ensure byte 0 carries the real identifier ────────────────────────
+    # Files with a blank lower page (byte 0 = 0xFF) cause download issues in
+    # browsers because the file appears to start with hundreds of 0xFF bytes.
+    # Writing the real identifier (from byte 0x80) to byte 0 fixes this.
+    if data[0] == 0xFF and len(data) >= 129:
+        data[0] = data[0x80]
+
     return (data, vendor_final, pn_final, sn_final, t_type, "Optical",
             distance_str, "Rev 1.0", "Ready",
             md5_digest.hex().upper(), crc32_str)
