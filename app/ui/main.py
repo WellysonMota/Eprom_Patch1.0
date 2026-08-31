@@ -4,7 +4,7 @@ from pathlib import Path
 
 #updated 20/06
 
-# --- 🛠️ PATH FIX --- Atualizando seerve
+# --- 🛠️ PATH FIX ---
 current_dir = Path(__file__).resolve().parent
 project_root = current_dir.parent.parent
 if str(project_root) not in sys.path:
@@ -12,6 +12,20 @@ if str(project_root) not in sys.path:
 
 from app.core.algorithms import apply_cisco_patch, calculate_sff_checksum
 from app.core.constants  import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS, PAGE2_PROFILES
+
+
+def detect_module_family(identifier_byte):
+    """
+    Mirrors the exact family split used in algorithms.apply_cisco_patch,
+    so the Page 02h combiner always agrees with how the file was patched.
+    Returns one of: "SFP", "QSFP", "400G".
+    """
+    if identifier_byte == 0x18:
+        return "400G"
+    elif identifier_byte == 0x03:
+        return "SFP"
+    else:
+        return "QSFP"
 
 # ── SHARED CSS ────────────────────────────────────────────────────────────────
 SHARED_CSS = """
@@ -256,6 +270,85 @@ def page_patcher():
                 "⚠️  Page 02h content is fixed per SKU, not per unit — never mix CLEI/PN "
                 "strings from one physical transceiver model onto another."
             )
+
+        st.markdown('<div class="section-label">09 — Combined Structure (Page 00h + Page 02h)</div>',
+                    unsafe_allow_html=True)
+        st.caption(
+            "Merges the already-patched binary from section 06 with the Page 02h profile "
+            "selected in section 08 into a single multi-page file — the same layout convention "
+            "used by full EEPROM dumps (Lower + Upper Page00 + Page01 + Page02, 512 bytes total). "
+            "Nothing in the Page 00h patch is recalculated here."
+        )
+
+        detected_family = detect_module_family(patched_bin[0])
+        page2_family     = page2_info.get("family", "?")
+
+        fam_c1, fam_c2 = st.columns(2)
+        with fam_c1:
+            st.markdown(f"**Detected from patched file:** `{detected_family}` (identifier byte `0x{patched_bin[0]:02X}`)")
+        with fam_c2:
+            st.markdown(f"**Selected Page 02h profile family:** `{page2_family}`")
+
+        if detected_family == "400G":
+            st.error(
+                "⚠️  This file was detected as a 400G / QSFP-DD (CMIS) module. There are no "
+                "CMIS Page 02h profiles in the database yet — combining is disabled to avoid "
+                "writing an SFP/QSFP-layout page onto a CMIS module."
+            )
+        elif page2_family != detected_family:
+            st.error(
+                f"⚠️  Family mismatch: the patched file is **{detected_family}**, but the Page 02h "
+                f"profile selected in section 08 is **{page2_family}** ('{page2_info['product']}'). "
+                f"Go back to section 08 and pick a {detected_family} profile before combining — "
+                f"writing a mismatched Page 02h can misclassify the module on the switch."
+            )
+        else:
+            combined_bin = bytearray(patched_bin)
+            if len(combined_bin) < 512:
+                combined_bin.extend(b'\x00' * (512 - len(combined_bin)))
+            combined_bin[384:512] = page2_bytes
+
+            st.success(f"✅  Families match ({detected_family}) — Page 02h merged at bytes 0x180–0x1FF (384–511).")
+
+            st.download_button(
+                label="🧩  DOWNLOAD FULL STRUCTURE (Page00 + Page02 combined)",
+                data=bytes(combined_bin),
+                file_name=f"full_{sn}_{page2_info['product']}.bin",
+                mime="application/octet-stream",
+                key="combined_download_btn",
+            )
+
+            st.caption("Single-line hex string — full 512-byte structure.")
+            st.code(bytes(combined_bin).hex().upper(), language="text")
+
+            with st.expander("ℹ️  How to apply this combined file to the module", expanded=False):
+                st.markdown(f"""
+This file is a **documentation/reference layout**, not a single continuous I2C write region.
+The two pages still live at different physical locations depending on the family:
+
+**{detected_family} module:**
+""" + (
+"""
+- Bytes `0x000–0x0FF` (0–255): write to the **A0h** device as-is — this already contains the
+  Cisco compatibility patch from section 06 (offsets `0x60–0x7F`).
+- Bytes `0x180–0x1FF` (384–511): write to the **A2h** device with the page-select byte
+  (`0x7F` on A2h) set to `0x02` first — this is the Page 02h block.
+- Bytes `0x100–0x17F` (256–383) are the A2h DOM/calibration lower page and are only meaningful
+  if they came from a real original dump — do not write them if they were zero-padded.
+""" if detected_family == "SFP" else
+"""
+- Bytes `0x000–0x0FF` (0–255): write to the module with the page-select byte (offset `0x7F`)
+  at `0x00` — this already contains the Cisco compatibility patch from section 06
+  (Lower Page + Upper Page 00h, offsets `0xE0–0xFF`).
+- Bytes `0x180–0x1FF` (384–511): write with the page-select byte set to `0x02` — this is the
+  Page 02h block.
+- Bytes `0x100–0x17F` (256–383) represent Page 01h and are zero-filled here; leave that page
+  untouched on the physical module unless you have a real reference for it.
+"""
+) + """
+Always read each page back after writing and re-verify its checksums (Page 00h: CC_BASE/CC_EXT;
+Page 02h: bytes `0x{'1F' if detected_family == 'SFP' else '21'}`/`0x5F`/`0x69` relative to the page) before re-inserting the module.
+                """)
 
 
 def page_validator():

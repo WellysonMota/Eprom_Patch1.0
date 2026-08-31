@@ -1,0 +1,18 @@
+
+
+Commands on Pycharm side
+
+
+
+Commands on Server side
+git commit
+git push origin master
+
+Hetzner
+
+ssh root@62.238.27.13
+Senha
+
+git pull origin master
+sudo systemctl restart ftlc-encoder.service
+sudo systemctl status ftlc-encoder.service
