@@ -4,7 +4,7 @@ from pathlib import Path
 
 #updated 20/06
 
-# --- 🛠️ PATH FIX ---
+# --- 🛠️ PATH FIX --- Atualizando seerve
 current_dir = Path(__file__).resolve().parent
 project_root = current_dir.parent.parent
 if str(project_root) not in sys.path:
