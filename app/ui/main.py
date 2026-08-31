@@ -172,6 +172,12 @@ def page_patcher():
         (patched_bin, vendor, part, sn, t_type, media,
          distance, rev, status, md5_res, crc_res) = st.session_state["patch_result"]
 
+        # Page 0 = Lower Page (0-127) + Upper Page 00h (128-255) = 256 bytes exactly.
+        # patched_bin itself may be padded up to 512 bytes to make room for
+        # Page01/Page02 (used later in section 09) — sections 06/07 should only
+        # ever show/export the real Page 0 content, not that trailing padding.
+        page0_bin = bytes(patched_bin[:256])
+
         st.success("✅  Analysis & Patching Complete!")
 
         st.markdown('<div class="section-label">04 — Hardware Metadata</div>', unsafe_allow_html=True)
@@ -198,7 +204,7 @@ def page_patcher():
         st.markdown('<div class="section-label">06 — Export</div>', unsafe_allow_html=True)
         st.download_button(
             label="🚀  DOWNLOAD PATCHED BINARY",
-            data=bytes(patched_bin),
+            data=page0_bin,
             file_name=f"patched_{sn}_{selected_manu_id_hex}.bin",
             mime="application/octet-stream",
         )
@@ -206,7 +212,7 @@ def page_patcher():
         st.markdown('<div class="section-label">07 — String (Copy for EEPROM IDE)</div>',
                     unsafe_allow_html=True)
         st.caption("Single-line hex string — paste directly into your EEPROM programming IDE.")
-        st.code(bytes(patched_bin).hex().upper(), language="text")
+        st.code(page0_bin.hex().upper(), language="text")
 
         st.markdown('<div class="section-label">08 — Page 02h (CLEI) Injection</div>', unsafe_allow_html=True)
         st.caption(
