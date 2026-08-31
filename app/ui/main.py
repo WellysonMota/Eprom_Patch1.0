@@ -11,7 +11,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from app.core.algorithms import apply_cisco_patch, calculate_sff_checksum
-from app.core.constants  import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS
+from app.core.constants  import MAGIC_KEYS, TRANSCEIVER_IDENTIFIERS, PAGE2_PROFILES
 
 # ── SHARED CSS ────────────────────────────────────────────────────────────────
 SHARED_CSS = """
@@ -193,6 +193,69 @@ def page_patcher():
                     unsafe_allow_html=True)
         st.caption("Single-line hex string — paste directly into your EEPROM programming IDE.")
         st.code(bytes(patched_bin).hex().upper(), language="text")
+
+        st.markdown('<div class="section-label">08 — Page 02h (CLEI) Injection</div>', unsafe_allow_html=True)
+        st.caption(
+            "Independent of the dump above — Page 02h is fixed per SKU (not per unit). "
+            "Pick the profile matching this transceiver's physical type."
+        )
+
+        page2_choice = st.selectbox(
+            "Page 02h Profile:",
+            list(PAGE2_PROFILES.keys()),
+            key="page2_profile_select",
+        )
+        page2_info = PAGE2_PROFILES[page2_choice]
+
+        p2c1, p2c2 = st.columns([3, 1])
+        with p2c1:
+            st.markdown(
+                f"**{page2_info['product']}**&nbsp;&nbsp;|&nbsp;&nbsp;"
+                f"CLEI `{page2_info['clei']}`&nbsp;&nbsp;|&nbsp;&nbsp;"
+                f"PN `{page2_info['pn']}`"
+            )
+        with p2c2:
+            badge_class = "badge-match" if page2_info["status"] == "Validated" else "badge-warn"
+            st.markdown(
+                f'<span class="{badge_class}">{page2_info["status"].upper()}</span>',
+                unsafe_allow_html=True,
+            )
+
+        if page2_info["status"] != "Validated":
+            st.warning(f"⚠️  {page2_info['note']}")
+        else:
+            st.info(page2_info["note"])
+
+        page2_bytes = bytes.fromhex(page2_info["hex"])
+
+        st.download_button(
+            label="📥  DOWNLOAD PAGE 02h BINARY",
+            data=page2_bytes,
+            file_name=f"page02h_{page2_info['product']}.bin",
+            mime="application/octet-stream",
+            key="page2_download_btn",
+        )
+
+        st.caption("Single-line hex string — paste directly into your EEPROM programming IDE (Coherent IDE, etc.).")
+        st.code(page2_info["hex"], language="text")
+
+        with st.expander("ℹ️  How to apply Page 02h to the module (SFP / QSFP)", expanded=False):
+            st.markdown("""
+1. Connect to the transceiver over I2C (Coherent IDE, Tera Term, or your EEPROM programmer).
+2. Select **Page 02h**: write `0x02` to the page-select byte, offset **0x7F**
+   (SFP/SFP+/SFP28 → device A2h, byte 127; QSFP/QSFP28/CMIS → device A0h, byte 127).
+3. With Page 02h selected, write the 128 bytes above to the **upper page**
+   (physical offsets 0x80–0xFF).
+4. Do not touch any other page while doing this — Page 02h is independent from
+   the Page 00h compatibility patch (CC_BASE / CC_EXT) generated in section 06 above.
+5. Read the page back and confirm the three checksums:
+   byte `0x21` = sum(0x00–0x20) · byte `0x5F` = sum(0x40–0x5E) · byte `0x69` = sum(0x60–0x68).
+6. Re-insert the module in the switch and confirm it comes up correctly.
+            """)
+            st.warning(
+                "⚠️  Page 02h content is fixed per SKU, not per unit — never mix CLEI/PN "
+                "strings from one physical transceiver model onto another."
+            )
 
 
 def page_validator():

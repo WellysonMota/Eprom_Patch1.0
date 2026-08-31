@@ -139,7 +139,7 @@ SERIAL_HEX = "55574e31463338202020202020202020"  # "A46A4RK         "
 ROOT_DIR = "./c3560_extracted"
 
 
-CLEIS CISCO:
+CLEIS CISCO:pip install
 
 Modelo Cisco,CLEI Code,Descrição
 GLC-SX-MM		COUIAJCBAA	1000BASE-SX (Multimode)
@@ -241,7 +241,7 @@ Intel,00 1B 21,Obrigatório para rebrand Intel.
 Cisco,00 05 5F,Opcional (o MD5 é o que manda).
 Juniper,00 05 85,Importante para conformidade rigorosa.
 Finisar,00 90 65,OUI de fábrica (comum em módulos OEM).
-Avago,00 17 6A,OUI de fábrica (muito comum em 10G/40G).
+Avago,00 17 6A,OUpip install I de fábrica (muito comum em 10G/40G).
 
 
 Prioridade,Campo,Valor Necessário,Por que?
