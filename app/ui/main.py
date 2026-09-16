@@ -451,6 +451,18 @@ def page_arista_validator():
         st.info("Place arista_validator_app.py alongside main.py and restart.")
 
 
+def page_dco_validator():
+    validator_path = current_dir / "dco100g_validator_app.py"
+    if validator_path.exists():
+        with open(validator_path) as f:
+            code = f.read()
+        code = code.replace("st.set_page_config(", "# st.set_page_config(")
+        exec(code, {"__name__": "__dco100g_validator__"})
+    else:
+        st.error("dco100g_validator_app.py not found in the same directory.")
+        st.info("Place dco100g_validator_app.py alongside main.py and restart.")
+
+
 def page_bulk():
     bulk_path = current_dir / "bulk_encoder_app.py"
     if bulk_path.exists():
@@ -477,6 +489,7 @@ PAGES = {
     "ftlc_val":   {"icon": "✅", "label": "FTLC Validator",        "fn": page_ftlc_validator},
     "arista":     {"icon": "🅰️", "label": "Arista Encoder",        "fn": page_arista},
     "arista_val": {"icon": "🅰️", "label": "Arista Validator",      "fn": page_arista_validator},
+    "dco100g_val":{"icon": "🛰️", "label": "100G DCO Validator",    "fn": page_dco_validator},
 }
 
 
