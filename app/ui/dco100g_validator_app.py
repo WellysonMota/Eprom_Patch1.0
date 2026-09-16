@@ -29,8 +29,13 @@ def parse_dump(text: str) -> dict:
             pages[current_page] = {}
             continue
         if "Lower Memory" in line:
-            current_page = "lower"
-            pages[current_page] = {}
+            # Lower Memory (physical bytes 0x00-0x7F) is merged into Page 00 —
+            # this app addresses everything by numeric hex page only, never
+            # a "lower" string, matching how the confirmed register map below
+            # (e.g. Page 00:0x6B, Page 00:0x8E) is written.
+            current_page = 0
+            if 0 not in pages:
+                pages[0] = {}
             continue
         if "Page Not Valid" in line:
             current_page = None
@@ -124,32 +129,46 @@ def resolve_channel(ch_raw, grid_spacing_code=0x5):
 # silently produce a false PASS.
 # ─────────────────────────────────────────────────────────────────────────────
 DEFAULT_CHECKS = [
-    {"Enabled": True,  "Label": "FlexTune Enable (1Eh:0xC8)",              "Page": "1E",  "Offset": "C8", "Width": 1, "Compare": "Equals", "Expected": "00", "Note": "CONFIRMED offset. 00=Disabled, 01=Enabled"},
-    {"Enabled": True,  "Label": "Power Class Override / ModPwrClassOverride (1Eh:0xFD)", "Page": "1E", "Offset": "FD", "Width": 1, "Compare": "Equals", "Expected": "02", "Note": "CONFIRMED offset (ftlc_validator TARGET_P1E_FD)"},
-    {"Enabled": True,  "Label": "Transceiver Type / LowMemConfigSelect (B0h:0x80)", "Page": "B0", "Offset": "80", "Width": 1, "Compare": "Equals", "Expected": "01", "Note": "CONFIRMED offset. Set Expected to 01 or 06 per target profile"},
-    {"Enabled": True,  "Label": "Channel Auto-Update on Tune / NominalWavelengthControl (B0h:0x81)", "Page": "B0", "Offset": "81", "Width": 1, "Compare": "Equals", "Expected": "01", "Note": "CONFIRMED offset"},
-    {"Enabled": True,  "Label": "Max Power (Lower Memory 0x6B)",           "Page": "lower", "Offset": "6B", "Width": 1, "Compare": "Equals", "Expected": "37", "Note": "CONFIRMED offset. 37=5.5W(3351)/3E=6.2W(3352) — set per unit"},
-    {"Enabled": False, "Label": "Disable Power Class 8",                  "Page": "1E",  "Offset": "",   "Width": 1, "Compare": "Equals", "Expected": "01", "Note": "⚠️ offset TO CONFIRM against a real dump — fill Offset then enable"},
-    {"Enabled": False, "Label": "Extended Link Enable (extended_link_en)", "Page": "1E",  "Offset": "",   "Width": 1, "Compare": "Equals", "Expected": "01", "Note": "⚠️ offset TO CONFIRM — script param confirmed for FTLC3353, EEPROM byte not yet mapped"},
-    {"Enabled": False, "Label": "Max Reach SMF / LengthSMF (km)",         "Page": "1E",  "Offset": "",   "Width": 1, "Compare": "Equals", "Expected": "78", "Note": "⚠️ offset TO CONFIRM — 0x78=120km per COGE9 reference script"},
-    {"Enabled": False, "Label": "RX Alarm Low, decreased (RxOptPwrLoAlm)", "Page": "1E", "Offset": "",   "Width": 1, "Compare": "Equals", "Expected": "06", "Note": "⚠️ offset TO CONFIRM — 06≈-32dBm per COGE9 reference script"},
-    {"Enabled": False, "Label": "RX Warning Low, decreased (RxOptPwrLoWrn)","Page": "1E", "Offset": "",   "Width": 1, "Compare": "Equals", "Expected": "0A", "Note": "⚠️ offset TO CONFIRM — 0A≈-30dBm per COGE9 reference script"},
-    {"Enabled": False, "Label": "LOS Assert RX (rx_los_trigger_sp)",      "Page": "1E",  "Offset": "",   "Width": 2, "Compare": "Equals", "Expected": "",   "Note": "⚠️ offset TO CONFIRM — script ref -35.0000; byte encoding not yet mapped"},
-    {"Enabled": False, "Label": "LOS Assert RX, decreased (rx_los_hyst_sp)","Page": "1E", "Offset": "",   "Width": 2, "Compare": "Equals", "Expected": "",   "Note": "⚠️ offset TO CONFIRM — script ref -34.0000; byte encoding not yet mapped"},
+    # ── Core 11-step procedure — confirmed against Welly's notepad
+    #    ("Procedures made in the Samples we tested and was approved by the
+    #    customer" / Leandro Script CH36). Page is always numeric hex.
+    {"Enabled": True,  "Label": "(1) FlexTune Enable",                    "Page": "1E", "Offset": "C8", "Width": 1, "Compare": "Equals", "Expected": "00", "Note": "00=Disabled, 01=Enabled"},
+    {"Enabled": True,  "Label": "(1.2) Nominal Wavelength = Actual",      "Page": "B0", "Offset": "81", "Width": 1, "Compare": "Equals", "Expected": "01", "Note": "Writes actual tuned wavelength to nominal (reported to host)"},
+    {"Enabled": True,  "Label": "(2) Channel Set",                        "Page": "12", "Offset": "88", "Width": 2, "Compare": "Equals", "Expected": "0006", "Note": "Ch37 example. Positive ch: 00+N — Negative ch: FF+N"},
+    {"Enabled": True,  "Label": "(3) Override PowerClass",                "Page": "1E", "Offset": "FD", "Width": 1, "Compare": "Equals", "Expected": "01", "Note": "Leandro script=01h, Firouz script=02h — set per target"},
+    {"Enabled": True,  "Label": "(4) Disabled PowerClass 8",              "Page": "00", "Offset": "81", "Width": 1, "Compare": "Equals", "Expected": "CD", "Note": "Solved PowerClass8 host issue on Huawei S6730"},
+    {"Enabled": True,  "Label": "(5) Extended Link (Chromatic Dispersion)","Page": "1E", "Offset": "C7", "Width": 1, "Compare": "Equals", "Expected": "01", "Note": "00=Disabled, 01=Enabled"},
+    {"Enabled": True,  "Label": "(6) Decreased RX Alarm",                 "Page": "03", "Offset": "B2", "Width": 2, "Compare": "Equals", "Expected": "0001", "Note": "RX threshold alarm, 2 bytes"},
+    {"Enabled": True,  "Label": "(7) Decreased RX Warning",               "Page": "03", "Offset": "B6", "Width": 2, "Compare": "Equals", "Expected": "0002", "Note": "RX threshold warning, 2 bytes"},
+    {"Enabled": True,  "Label": "(8) Decreased LosAssert RX",             "Page": "1E", "Offset": "C2", "Width": 2, "Compare": "Equals", "Expected": "F254", "Note": "-35dBm"},
+    {"Enabled": True,  "Label": "(9) Decreased LosDeAssert RX",           "Page": "1E", "Offset": "C4", "Width": 2, "Compare": "Equals", "Expected": "F286", "Note": "-34.5dBm"},
+    {"Enabled": True,  "Label": "(10) Extended Reach SMF (Link Length)",  "Page": "00", "Offset": "8E", "Width": 1, "Compare": "Equals", "Expected": "78",   "Note": "120km, units of 1km"},
+    {"Enabled": True,  "Label": "(11) MaxPower Change",                   "Page": "00", "Offset": "6B", "Width": 1, "Compare": "Equals", "Expected": "1A",   "Note": "2.6W, units of 0.1W"},
+    {"Enabled": True,  "Label": "Transceiver Type / Ext. Compliance Code","Page": "B0", "Offset": "80", "Width": 1, "Compare": "Equals", "Expected": "06",   "Note": "LR4=06h, LR1/ZR1=01h"},
+
+    # ── Additional registers from the notepad — supplementary/ambiguous,
+    #    left OFF by default; enable once you confirm the expected value.
+    {"Enabled": False, "Label": "FlexTune Grid Spacing",                  "Page": "1E", "Offset": "CB", "Width": 1, "Compare": "Equals", "Expected": "05", "Note": "0100b/04=50GHz(default), 0101b/05=100GHz"},
+    {"Enabled": False, "Label": "FlexTune Status (read-only)",            "Page": "1E", "Offset": "CA", "Width": 1, "Compare": "Equals", "Expected": "",   "Note": "Status register — set Expected once a known-good value is confirmed"},
+    {"Enabled": False, "Label": "Add Channel (nm) to Vendor PN",          "Page": "1E", "Offset": "C1", "Width": 1, "Compare": "Equals", "Expected": "00", "Note": "00=Normal/default, 01=Enable — module must be in LOW POWER to set; non-volatile"},
+    {"Enabled": False, "Label": "High/Low Power Mode",                    "Page": "00", "Offset": "5D", "Width": 1, "Compare": "Equals", "Expected": "0D", "Note": "0D=High Power, 00=Low Power — confirm before enabling, notes were ambiguous"},
+    {"Enabled": False, "Label": "SFF Unlock Registers (write-only)",      "Page": "00", "Offset": "7B", "Width": 4, "Compare": "Equals", "Expected": "556E6C6B", "Note": "⚠️ transient write-trigger ('Unlk') — won't read back after Save, not useful as a PASS/FAIL check"},
+    {"Enabled": False, "Label": "SFF Save Registers (write-only)",        "Page": "00", "Offset": "7B", "Width": 4, "Compare": "Equals", "Expected": "53617665", "Note": "⚠️ transient write-trigger ('Save') — same caveat as above"},
+    {"Enabled": False, "Label": "CMIS Unlock Registers (write-only)",     "Page": "00", "Offset": "7A", "Width": 4, "Compare": "Equals", "Expected": "556E6C6B", "Note": "⚠️ transient write-trigger — CMIS variant of the SFF unlock, same caveat"},
+    {"Enabled": False, "Label": "CMIS Save Registers (write-only)",       "Page": "00", "Offset": "7A", "Width": 4, "Compare": "Equals", "Expected": "53617665", "Note": "⚠️ transient write-trigger — CMIS variant of the SFF save, same caveat"},
 ]
 
 COMPARE_OPS = ["Equals", "Not Equals", ">=", "<="]
 
 def get_value(pages: dict, page_str: str, offset_str: str, width: int):
-    """Resolve a page/offset/width combo to an integer, or None if unavailable."""
-    page_str = (page_str or "").strip().lower()
-    if page_str in ("lower", "lp", "low", "lower memory"):
-        page_key = "lower"
-    else:
-        try:
-            page_key = int(page_str, 16)
-        except (ValueError, TypeError):
-            return None
+    """Resolve a page/offset/width combo to an integer, or None if unavailable.
+    Page is always a numeric hex page number (00, 1E, B0, 03, 12, ...) —
+    Page 00 covers both Lower Memory (0x00-0x7F) and Page 00h Upper (0x80-0xFF),
+    since parse_dump merges them into the same dict."""
+    try:
+        page_key = int((page_str or "").strip(), 16)
+    except (ValueError, TypeError):
+        return None
     p = pages.get(page_key)
     if not p:
         return None
@@ -287,10 +306,11 @@ if "dco_checks_df" not in st.session_state:
 # ── Configuration panel ─────────────────────────────────────────────────────
 st.markdown('<div class="sec">1 · Configure Checks</div>', unsafe_allow_html=True)
 st.caption(
-    "Enable/disable each check, and set Page (hex, or 'lower' for Lower Memory), "
+    "Enable/disable each check, and set Page (numeric hex only — 00, 1E, B0, 03, 12, "
+    "etc. Page 00 covers both Lower Memory 0x00–0x7F and Page 00h Upper 0x80–0xFF), "
     "Offset (hex), Width (bytes), Compare operator and Expected value (hex). "
-    "Rows marked ⚠️ in Note need a field-confirmed offset before you enable them — "
-    "an unconfirmed offset must never silently produce a PASS."
+    "Rows marked ⚠️ in Note are write-only trigger registers or need a value you "
+    "haven't confirmed yet — leave them off until you're sure."
 )
 
 edited_df = st.data_editor(
@@ -301,7 +321,7 @@ edited_df = st.data_editor(
     column_config={
         "Enabled": st.column_config.CheckboxColumn("Run?", width="small"),
         "Label":   st.column_config.TextColumn("Check", width="large"),
-        "Page":    st.column_config.TextColumn("Page", width="small", help="Hex page number, e.g. 1E, B0, 12, 00 — or 'lower' for Lower Memory"),
+        "Page":    st.column_config.TextColumn("Page", width="small", help="Numeric hex page only, e.g. 00, 1E, B0, 03, 12"),
         "Offset":  st.column_config.TextColumn("Offset", width="small", help="Hex byte offset within the page, e.g. C8"),
         "Width":   st.column_config.NumberColumn("Width (B)", width="small", min_value=1, max_value=4, step=1),
         "Compare": st.column_config.SelectboxColumn("Compare", width="small", options=COMPARE_OPS),
